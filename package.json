@@ -1,0 +1,12 @@
+{
+  "name": "loot-the-egg",
+  "version": "0.1.0",
+  "description": "Loot the Egg: a 3D browser action game (classes, dungeon towers, bosses, eggs, pets) with a Roblox port kit and a Scratch version",
+  "private": true,
+  "scripts": {
+    "test": "node tools/smoke_test.js",
+    "build:site": "bash tools/build_site.sh",
+    "export:roblox": "node roblox/tools/export_config.js game/index.html roblox/ConfigData.lua",
+    "build:scratch": "python3 scratch/build_sb3.py scratch/loot-the-egg.sb3"
+  }
+}
