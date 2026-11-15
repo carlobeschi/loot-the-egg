@@ -187,9 +187,9 @@ function TowerService.Fill(model, base, depth, world, floors)
 			DungeonService.SpawnEnemy(base * CFrame.new(0, 1 + k * Config.FloorHeight + 8, 6), depth, k, "boss", world, folder, function(killer, position)
 				model:SetAttribute("Cleared", true)
 				if killer then
-					DungeonService.OnBossDefeated(killer, depth, world, position)
+					DungeonService.OnBossDefeated(killer, depth, world, position, folder)
 				else
-					DungeonService.SpawnEgg(position, Config.rollEgg(depth))
+					DungeonService.SpawnEgg(position, Config.rollEgg(depth), folder)
 				end
 				-- reset the tower a while later
 				task.delay(RESET_AFTER, function()

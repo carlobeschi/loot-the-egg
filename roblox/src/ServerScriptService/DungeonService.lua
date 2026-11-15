@@ -1,6 +1,7 @@
 --[[ DungeonService  (ModuleScript, put it in ServerScriptService)
   The dungeon loop: enemies sleep until you come close, the boss slams, summons help and enrages, the boss drops
-  an egg, taking the egg wakes every enemy, and carrying it back to the town banks it. Dying with the egg loses it.
+  an egg, taking the egg wakes every enemy of that dungeon, and carrying it back to the town banks it. Dying with
+  the egg loses it. The alarm is per dungeon: other dungeons (and other players' runs there) stay calm.
 
   Your map needs:
     - a Part named "TownZone" in Workspace (invisible, CanCollide off) covering the safe town area
@@ -20,19 +21,35 @@ local Data = Config.Data
 local DungeonService = {}
 local DataService, PetService
 local carrying = {} -- [Player] = rarity of the egg they are carrying
+local eggFrom = {} -- [Player] = the enemies' folder (a tower's Enemies folder) whose egg they carry
 local notify = function(_player, _text) end -- set by Main so we can show messages
 
 -- JS enemy speeds are in "per frame" units where the player walks at about 2.5. Roblox players walk at 16.
 local SPEED_TO_WALKSPEED = 16 / 2.5
 local PLAYER_HIT_COOLDOWN = 40 / 60 -- after getting hit, a player can't be hit again for this long (JS P.hit=40)
 
-local function setAggro(on)
-	if (workspace:GetAttribute("Aggro") == true) == on then
+-- The alarm: while someone carries an egg from a dungeon, every enemy of that dungeon is awake, faster
+-- (Config.AggroSpeedBoost) and chases the carrier anywhere. The folder that holds a dungeon's enemies gets the
+-- attribute "Alarm" so other scripts can see it.
+local function alarmed(group)
+	return group ~= nil and group:GetAttribute("Alarm") == true
+end
+
+local function updateAlarm(group)
+	if not group then
 		return
 	end
-	workspace:SetAttribute("Aggro", on)
-	-- wakes every enemy and speeds them up (Config.AggroSpeedBoost), or calms them back down
-	for _, enemy in ipairs(CollectionService:GetTagged("Enemy")) do
+	local on = false
+	for _, folder in pairs(eggFrom) do
+		if folder == group then
+			on = true
+		end
+	end
+	if alarmed(group) == on then
+		return
+	end
+	group:SetAttribute("Alarm", on)
+	for _, enemy in ipairs(group:GetChildren()) do
 		local humanoid = enemy:FindFirstChildOfClass("Humanoid")
 		local base = enemy:GetAttribute("BaseWalkSpeed")
 		if humanoid and base then
@@ -41,14 +58,21 @@ local function setAggro(on)
 	end
 end
 
+-- the egg is gone (banked, lost or the player left): calm its dungeon down if nobody else carries one from there
+local function clearCarrier(player)
+	local group = eggFrom[player]
+	carrying[player] = nil
+	eggFrom[player] = nil
+	player:SetAttribute("CarryingEgg", nil)
+	updateAlarm(group)
+end
+
 function DungeonService.Init(dataService, petService, notifyFunction)
 	DataService = dataService
 	PetService = petService
 	if notifyFunction then
 		notify = notifyFunction
 	end
-	workspace:SetAttribute("Aggro", false)
-
 	-- Reaching a town banks the egg. Every part tagged "TownZone" counts: the World 1 one from the place
 	-- (Workspace.TownZone, tagged here) and the World 2 one that World2Service builds.
 	local function watchTown(town)
@@ -200,7 +224,7 @@ function DungeonService.SpawnEnemy(cframe, depth, floorIndex, kind, world, paren
 	local walkSpeed = SPEED_TO_WALKSPEED * stats.speedFactor
 	humanoid.MaxHealth = stats.health
 	humanoid.Health = stats.health
-	humanoid.WalkSpeed = walkSpeed * (workspace:GetAttribute("Aggro") and Config.AggroSpeedBoost or 1)
+	humanoid.WalkSpeed = walkSpeed * (alarmed(parent) and Config.AggroSpeedBoost or 1)
 	humanoid.BreakJointsOnDeath = false
 	enemy:SetAttribute("BaseWalkSpeed", walkSpeed)
 	enemy:SetAttribute("Damage", stats.damage)
@@ -224,16 +248,17 @@ function DungeonService.SpawnEnemy(cframe, depth, floorIndex, kind, world, paren
 		local offset = playerRoot.Position - home
 		return Vector3.new(offset.X, 0, offset.Z).Magnitude <= Config.LeashDistance
 	end
-	local function carryingEgg(player)
-		return DungeonService.IsCarrying(player)
+	local function carriesOurEgg(player)
+		return eggFrom[player] ~= nil and eggFrom[player] == enemy.Parent
 	end
 	task.spawn(function()
 		while enemy.Parent and humanoid.Health > 0 do
-			local woke = enemy:GetAttribute("Awake") or workspace:GetAttribute("Aggro")
+			local alarm = alarmed(enemy.Parent)
+			local woke = enemy:GetAttribute("Awake") or alarm
 			local target
 			if woke then
-				if workspace:GetAttribute("Aggro") then
-					target = nearestPlayerRoot(root.Position, math.huge, false, carryingEgg)
+				if alarm then
+					target = nearestPlayerRoot(root.Position, math.huge, false, carriesOurEgg)
 				end
 				target = target or nearestPlayerRoot(root.Position, math.huge, false, nearHome)
 			else
@@ -273,7 +298,7 @@ function DungeonService.SpawnEnemy(cframe, depth, floorIndex, kind, world, paren
 			if onBossDefeated then
 				onBossDefeated(killer, root.Position)
 			elseif killer then
-				DungeonService.OnBossDefeated(killer, depth, world, root.Position)
+				DungeonService.OnBossDefeated(killer, depth, world, root.Position, enemy.Parent)
 			end
 		end
 		task.wait(2)
@@ -298,7 +323,7 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 	local helpers = {}
 
 	local function restoreSpeed()
-		humanoid.WalkSpeed = boss:GetAttribute("BaseWalkSpeed") * (workspace:GetAttribute("Aggro") and Config.AggroSpeedBoost or 1)
+		humanoid.WalkSpeed = boss:GetAttribute("BaseWalkSpeed") * (alarmed(boss.Parent) and Config.AggroSpeedBoost or 1)
 	end
 
 	-- the charge: telegraph with a red strip, then dash in a straight line, hurting the first time it touches you
@@ -357,7 +382,7 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 
 	while boss.Parent and humanoid.Health > 0 do
 		task.wait(0.1)
-		if not boss:GetAttribute("Awake") and not workspace:GetAttribute("Aggro") then
+		if not boss:GetAttribute("Awake") and not alarmed(boss.Parent) then
 			nextSlam = os.clock() + B.slamEvery[world]
 			nextSummon = os.clock() + B.summonEvery
 			continue
@@ -438,7 +463,8 @@ end
 
 -- ---------- boss defeated -> progress -> egg ----------
 -- player = whoever dealt the last hit (CombatService sets the "LastHitBy" attribute on enemies).
-function DungeonService.OnBossDefeated(player, depth, world, position)
+-- group = the folder holding that dungeon's enemies (taking the egg alarms them)
+function DungeonService.OnBossDefeated(player, depth, world, position, group)
 	local profile = DataService.Get(player)
 	if not profile then
 		return
@@ -452,13 +478,13 @@ function DungeonService.OnBossDefeated(player, depth, world, position)
 		profile.bestDepth = math.max(profile.bestDepth, depth)
 	end
 	local rarity = Config.rollEgg(depth)
-	DungeonService.SpawnEgg(position, rarity)
+	DungeonService.SpawnEgg(position, rarity, group)
 	local opened = (firstTime and depth ~= 9 and depth < 18) and (" Dungeon " .. (depth + 1) .. " is open now!") or ""
 	notify(player, "The boss is down! Grab the " .. Data.rarities[rarity] .. " egg and run home!" .. opened)
 	return rarity
 end
 
-function DungeonService.SpawnEgg(position, rarity)
+function DungeonService.SpawnEgg(position, rarity, group)
 	local egg = Instance.new("Part")
 	egg.Name = "Egg"
 	egg.Size = Vector3.new(3, 4, 3)
@@ -485,10 +511,11 @@ function DungeonService.SpawnEgg(position, rarity)
 			return
 		end
 		carrying[player] = rarity
+		eggFrom[player] = group
 		player:SetAttribute("CarryingEgg", rarity)
 		egg:Destroy()
-		setAggro(true)
-		notify(player, "Everything is awake! Run back to town!")
+		updateAlarm(group)
+		notify(player, "The whole dungeon is awake! Run back to town!")
 	end)
 	return egg
 end
@@ -500,20 +527,12 @@ function DungeonService.BankEgg(player)
 		return
 	end
 	PetService.BankEgg(player, rarity)
-	carrying[player] = nil
-	player:SetAttribute("CarryingEgg", nil)
+	clearCarrier(player)
 	notify(player, "You brought home a " .. Data.rarities[rarity] .. " egg! It's in your backpack: equip it and click inside your pen to place it.")
-	if next(carrying) == nil then
-		setAggro(false) -- calm everything down when nobody is carrying an egg
-	end
 end
 
 function DungeonService.DropEgg(player)
-	carrying[player] = nil
-	player:SetAttribute("CarryingEgg", nil)
-	if next(carrying) == nil then
-		setAggro(false)
-	end
+	clearCarrier(player)
 end
 
 function DungeonService.IsCarrying(player)

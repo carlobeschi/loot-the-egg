@@ -94,7 +94,7 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 - Never let the client say "give me 1000 coins". The client only fires RemoteEvents like `Hatch`. The server checks and acts. `Main.server.lua` also rate-limits each action.
 - Add a distance check before hatching (the player must be near the nest) and before collecting.
-- For a real launch, use a session-locking save library such as ProfileService so two servers can't overwrite each other's saves.
+- Saves are session-locked (`DataService`): only the server that has a player's save open may write it. Test it with `studio-tools/TestSaveLock.lua`.
 
 ## Roblox rules to plan for
 
