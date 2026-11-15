@@ -15,7 +15,7 @@ Controls: WASD or arrows move, mouse looks and aims, click or space attacks, V s
 | Folder | What it is |
 |---|---|
 | `game/` | The game: a single self-contained `index.html` (three.js). This is the source of truth for design and balance. |
-| `roblox/` | Luau starter kit for the Roblox port (pets, pen plots, data saving, dungeon loop, HUD). `tools/export_config.js` copies the numbers from the JS game into `ConfigData.lua`. |
+| `roblox/` | Luau starter kit for the Roblox port (pets, pen plots, data saving, dungeon loop, HUD), laid out as a Rojo project. `tools/export_config.js` copies the numbers from the JS game into `ConfigData.lua`. |
 | `scratch/` | A simplified top-down Scratch version (`loot-the-egg.sb3`) and the script that builds it. |
 | `site/` | Landing page. `tools/build_site.sh` puts it together with the game into `dist/`. |
 | `hosting/` | Firebase Hosting config and steps for putting `dist/` online. |

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node tools/smoke_test.js",
     "build:site": "bash tools/build_site.sh",
-    "export:roblox": "node roblox/tools/export_config.js game/index.html roblox/ConfigData.lua",
+    "export:roblox": "node roblox/tools/export_config.js game/index.html roblox/src/ReplicatedStorage/Config/ConfigData.lua",
     "build:scratch": "python3 scratch/build_sb3.py scratch/loot-the-egg.sb3"
   }
 }

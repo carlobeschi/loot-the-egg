@@ -2,12 +2,12 @@
 // Copies the balance numbers (rarities, pets, income, rebirth, weapons, upgrade costs...) out of the
 // JavaScript game and writes them as a Roblox ModuleScript (ConfigData.lua).
 //
-// Usage (needs Node.js):   node export_config.js ../../game/index.html ../ConfigData.lua
+// Usage (needs Node.js):   node export_config.js ../../game/index.html ../src/ReplicatedStorage/Config/ConfigData.lua
 // Run it again any time you change numbers in the JavaScript game, then paste the new ConfigData.lua
 // into Roblox Studio (ReplicatedStorage > Config > ConfigData).
 const fs = require('fs');
 const htmlPath = process.argv[2] || '../../game/index.html';
-const outPath = process.argv[3] || '../ConfigData.lua';
+const outPath = process.argv[3] || '../src/ReplicatedStorage/Config/ConfigData.lua';
 
 const html = fs.readFileSync(htmlPath, 'utf8');
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];

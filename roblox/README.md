@@ -11,19 +11,32 @@ This folder is a head start for rebuilding the browser game in **Roblox Studio**
 
 ## What's in the folder
 
+With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straight into Studio. Without Rojo, paste each file's contents into a script of the kind shown.
+
 | File | Where it goes in Studio | What it does |
 |---|---|---|
-| `Config.lua` | ReplicatedStorage > **ModuleScript** named `Config` | Game rules: pen size, rebirth, weapon damage, egg odds, enemy stats |
-| `ConfigData.lua` | A ModuleScript named `ConfigData` **inside** `Config` | The numbers (rarities, pets, income, costs, weapon names). Generated from the JS game |
-| `DataService.lua` | ServerScriptService > ModuleScript | Saves and loads each player's progress (DataStore) |
-| `PlotService.lua` | ServerScriptService > ModuleScript | Gives each player a plot, builds the pen look, spawns their pets |
-| `PetService.lua` | ServerScriptService > ModuleScript | Hatching, equip best, selling, pen upgrades, rebirth, World Gate |
-| `DungeonService.lua` | ServerScriptService > ModuleScript | Enemies, boss defeated, egg drop, taking the egg wakes everything, banking it in town |
-| `Main.server.lua` | ServerScriptService > **Script** named `Main` | Starts everything, makes the RemoteEvents, runs the coin income loop |
-| `ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Hatch, Equip Best, Rebirth, Settings with "Show my pets" |
+| `src/ReplicatedStorage/Config/init.lua` | ReplicatedStorage > **ModuleScript** named `Config` | Game rules: pen size, rebirth, weapon damage, egg odds, enemy stats |
+| `src/ReplicatedStorage/Config/ConfigData.lua` | A ModuleScript named `ConfigData` **inside** `Config` | The numbers (rarities, pets, income, costs, weapon names). Generated from the JS game |
+| `src/ServerScriptService/DataService.lua` | ServerScriptService > ModuleScript | Saves and loads each player's progress (DataStore) |
+| `src/ServerScriptService/PlotService.lua` | ServerScriptService > ModuleScript | Gives each player a plot, builds the pen look, spawns their pets |
+| `src/ServerScriptService/PetService.lua` | ServerScriptService > ModuleScript | Hatching, equip best, selling, pen upgrades, rebirth, World Gate |
+| `src/ServerScriptService/DungeonService.lua` | ServerScriptService > ModuleScript | Enemies, boss defeated, egg drop, taking the egg wakes everything, banking it in town |
+| `src/ServerScriptService/Main.server.lua` | ServerScriptService > **Script** named `Main` | Starts everything, makes the RemoteEvents, runs the coin income loop |
+| `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Hatch, Equip Best, Rebirth, Settings with "Show my pets" |
+| `studio-tools/SetupTestPlace.lua`, `TestCheats.lua` | Pasted into Studio's Command Bar, never synced | Builds a test map; testing cheats |
 | `tools/export_config.js` | Stays on your computer | Re-creates `ConfigData.lua` from the JavaScript game |
+| `default.project.json` | Used by Rojo | Tells Rojo which folder goes to which Studio service |
 
-The `.server.lua` / `.client.lua` names are for the Rojo tool. In plain Studio just paste each file's contents into the right kind of script.
+## Using Rojo
+
+Rojo keeps the files in this repo and the Studio place in sync, so Claude Code can edit the files and Studio updates live.
+
+1. Install Rojo (the Rojo docs recommend the Rokit tool manager: `rokit add rojo-rbx/rojo`) and install the Rojo plugin into Studio.
+2. In this `roblox/` folder run `rojo serve`.
+3. In Studio, open a Baseplate place, open the Rojo plugin and click Connect.
+4. Edit files in `src/`; changes appear in Studio. Scripts only flow one way for the files in `src/`: edit them in the repo, not in Studio.
+
+Rojo only manages scripts. The map, plots, rigs and other parts live in the Studio place; run `studio-tools/SetupTestPlace.lua` in the Command Bar to build a test map, and save the place with File > Save to Roblox.
 
 ## Quick start
 
@@ -62,7 +75,7 @@ Run this any time you change numbers in the JavaScript game (needs Node.js):
 
 ```
 cd roblox/tools
-node export_config.js ../../three-oaths-3d.html ../ConfigData.lua
+node export_config.js ../../game/index.html ../src/ReplicatedStorage/Config/ConfigData.lua
 ```
 
 Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors, pet names, income, rebirth costs, weapon names and prices, and upgrade costs. The **rules** in `Config.lua` (egg odds formula, enemy stats formula, damage multipliers) are written by hand, so if you change those in the JS game, change them in `Config.lua` too. Rarity numbers start at 1 in Lua (1 = Common, 8 = Divine); weapon tiers and dungeon floors start at 0, like the JavaScript.
@@ -90,9 +103,9 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 If you want, I can write any of these next, one at a time, starting with whichever you pick.
 
-## Testing it (see also `SetupTestPlace.lua` and `TestCheats.lua`)
+## Testing it (see also `studio-tools/SetupTestPlace.lua` and `TestCheats.lua`)
 
-1. Paste `SetupTestPlace.lua` into View > Command Bar (in Edit mode) to build the 8 plots, the TownZone and the enemy rigs for you.
+1. Paste `studio-tools/SetupTestPlace.lua` into View > Command Bar (in Edit mode) to build the 8 plots, the TownZone and the enemy rigs for you.
 2. Add the scripts from the table above, then press **Test > Play** and look at the Output window (View > Output) for red errors.
 3. Use **Test > Server & Clients** with 2 clients to check that each player gets their own plot.
 4. While playing, use the Client/Server toggle to switch to Server view and paste a snippet from `TestCheats.lua` to give yourself coins and eggs.
