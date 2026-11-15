@@ -5,9 +5,12 @@ View > Output open. Paste anything red or orange back into the project thread.
 
 Cheats (Studio only): switch to **Server** view, open View > Command Bar, and run for example
 `print(game.ServerStorage.Cheat:Invoke("coins", 1000000))`. All commands are in `roblox/studio-tools/TestCheats.lua`.
+If the Command Bar runs on the Client even with Server selected (newer Studio does this), use the same commands from the
+client: `print(game.ReplicatedStorage.StudioCheat:InvokeServer("coins", 1000000))`. It only exists in Studio.
 
 Claude can also run these checks itself on Carlo's Mac (Studio in Play mode, driven through the Command Bar).
-Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio test" PR.
+Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio test" PR, and slice 6 passed
+(except banking an egg in the World 2 town, which needs a cleared World 2 dungeon and was not tried yet).
 
 ## Slice 1: combat, test tower, boss (PR #1)
 - [ ] You spawn at your pen; the sign shows your name; coins show top left.
@@ -52,3 +55,13 @@ Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio 
 - [ ] Knight, Shield Slam: a gold ring, nearby enemies get hurt and pushed back (the boss only a little).
 - [ ] Wizard, Blink Burst: a purple blast where you stand, then you jump forward; you never go through walls.
 - [ ] Bowman, Arrow Volley: a fan of 7 arrows (more with Ability levels) that each go through 2 enemies.
+
+## Slice 6: World 2 (Ember Wastes)
+- [ ] Unlock World 2 (cheat: `Invoke("world2")`), open the World Gate: there is a "Ember Wastes: Dungeons 10 to 18"
+      row with a Travel button. Travel puts you in the World 2 town with orange, smoky light.
+- [ ] Dungeon 10 (straight south of the town) fills with enemies when you walk in. Dungeon 11 is locked and pushes
+      you back out. Cheat: `Invoke("depth2", 3)` opens Dungeons 10 to 13.
+- [ ] Clear a World 2 dungeon, take the egg and bring it to the World 2 town plaza: it goes in your backpack.
+- [ ] You can't travel while carrying an egg ("Bring the egg to town first!").
+- [ ] Die in World 2: you come back in the World 2 town, not at home.
+- [ ] The portal behind the town sign ("Go home", press E) takes you back to your plot with normal light.

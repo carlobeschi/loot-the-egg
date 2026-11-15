@@ -255,6 +255,20 @@ local WORLD1_SPOTS = {
 	Vector3.new(-180, 0, -290), -- Dungeon 9
 }
 
+-- World 2 (Ember Wastes): Dungeons 10 to 14 in the first row south of the World 2 town, 15 to 18 further south.
+-- Offsets from Config.World2Origin.
+local WORLD2_SPOTS = {
+	Vector3.new(0, 0, 50), -- Dungeon 10
+	Vector3.new(110, 0, 50),
+	Vector3.new(-110, 0, 50),
+	Vector3.new(220, 0, 50),
+	Vector3.new(-220, 0, 50),
+	Vector3.new(55, 0, -140),
+	Vector3.new(-55, 0, -140),
+	Vector3.new(165, 0, -140),
+	Vector3.new(-165, 0, -140), -- Dungeon 18
+}
+
 function TowerService.Init(dungeonService, dataService, notifyFunction)
 	DungeonService = dungeonService
 	DataService = dataService
@@ -267,6 +281,9 @@ function TowerService.Init(dungeonService, dataService, notifyFunction)
 	end
 	for depth, spot in ipairs(WORLD1_SPOTS) do
 		TowerService.Build(spot, depth, 1, folder)
+	end
+	for i, offset in ipairs(WORLD2_SPOTS) do
+		TowerService.Build(Config.World2Origin + offset, 9 + i, 2, folder)
 	end
 end
 

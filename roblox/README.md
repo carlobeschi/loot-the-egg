@@ -24,13 +24,15 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow, and the Q abilities: gives your weapon, works out hits on the server |
 | `src/ServerScriptService/EggService.lua` | ServerScriptService > ModuleScript | Eggs as backpack items; placing them in your pen; countdown and hatching |
 | `src/ServerScriptService/ShopService.lua` | ServerScriptService > ModuleScript | Builds the town huts (Blacksmith, Trainer, World Gate), pen sign prompts, and does the buying |
-| `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds Dungeons 1 to 9 from Parts with gates, fills a tower with enemies and a boss when you walk in |
+| `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds Dungeons 1 to 9 (and 10 to 18 in World 2) from Parts with gates, fills a tower with enemies and a boss when you walk in |
+| `src/ServerScriptService/World2Service.lua` | ServerScriptService > ModuleScript | Builds World 2 (Ember Wastes): ground, town, portal home; moves players between the worlds |
 | `src/ServerScriptService/Main.server.lua` | ServerScriptService > **Script** named `Main` | Starts everything, makes the RemoteEvents, runs the coin income loop |
 | `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Equip Best, Rebirth, class picker, Settings with "Show my pets" |
 | `src/StarterPlayer/StarterPlayerScripts/ClientEggs.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows where an egg will go and places it when you click in your pen |
 | `src/StarterPlayer/StarterPlayerScripts/ClientShops.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | The shop, trainer, pen, rebirth and World Gate windows |
 | `src/StarterPlayer/StarterPlayerScripts/ClientTowers.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows each dungeon gate as locked (red) or open (green) for you |
 | `src/StarterPlayer/StarterPlayerScripts/ClientCombat.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Sends your aim to the server when you click with your weapon |
+| `src/StarterPlayer/StarterPlayerScripts/ClientWorld.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Ember lighting while you are in World 2 |
 | `studio-tools/SetupTestPlace.lua`, `TestCheats.lua` | Pasted into Studio's Command Bar, never synced | Builds a test map; testing cheats |
 | `tools/export_config.js` | Stays on your computer | Re-creates `ConfigData.lua` from the JavaScript game |
 | `default.project.json` | Used by Rojo | Tells Rojo which folder goes to which Studio service |
@@ -103,12 +105,10 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 ## Not done yet (suggested order)
 
-Done so far: combat and Q abilities (`CombatService`), Dungeons 1 to 9 with gates (`TowerService`), boss slam, charge, summons and enrage (`DungeonService`), eggs as backpack items (`EggService`), shops and screens (`ShopService`). Still to do:
+Done so far: combat and Q abilities (`CombatService`), Dungeons 1 to 9 with gates (`TowerService`), boss slam, charge, summons and enrage (`DungeonService`), eggs as backpack items (`EggService`), shops and screens (`ShopService`), World 2 with Dungeons 10 to 18 (`World2Service`). Slices 1 to 6 were Play-tested in Studio. Still to do:
 
-1. **Play-test every slice** in Studio (`docs/TESTING.md`) and fix what shows up.
-2. **World 2** map and its towers (depths 10 to 18). Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
-3. **Real models, egg visuals, sound and music.**
-4. **Private publish** for up to 10 early testers, then the content questionnaire (see `docs/HANDOVER.md`).
+1. **Real models, egg visuals, sound and music.** Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
+2. **Private publish** for up to 10 early testers, then the content questionnaire (see `docs/HANDOVER.md`).
 
 ## Checking the scripts without Studio
 
