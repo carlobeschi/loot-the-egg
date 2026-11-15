@@ -4,6 +4,9 @@ Versions are the published artifact versions of `game/index.html`. Earlier histo
 
 ## Unreleased
 - Project turned into a repository (this commit history starts here).
+- Roblox: combat (sword swing, staff bolt with blast, piercing arrows) worked out on the server; class picker; a generated test tower (Dungeon 1) with sleeping enemies and a boss that slams, summons help and enrages; dying with the egg loses it.
+- Roblox: eggs are backpack items (one per rarity, with a count). Equip one and click in your pen to place it; it counts down, then press E to hatch it. Placed eggs are saved. The old Hatch button is gone. Asked for by Lorenzo after the first Play test.
+- Roblox: fixes from a code review (remotes made before anything can wait, no endless wait without a Plots folder, saving off cleanly in an unpublished place, test cheats that actually reach the game's data, World 1 boss numbers matching the JS nerf).
 
 ## v55
 - Sword and bow made smaller to match the staff; their glow effects shrunk too.

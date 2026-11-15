@@ -6,7 +6,14 @@
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 
-local store = DataStoreService:GetDataStore("LootTheEgg_v1")
+-- GetDataStore errors in a place that was never published. Then the game still runs, it just doesn't save.
+local okStore, store = pcall(function()
+	return DataStoreService:GetDataStore("LootTheEgg_v1")
+end)
+if not okStore then
+	warn("[DataService] saving is off: " .. tostring(store) .. " (publish the place and enable Studio Access to API Services)")
+	store = nil
+end
 
 local DataService = {}
 local profiles = {} -- [Player] = data table
@@ -22,6 +29,7 @@ local function defaults()
 		eggs = { 0, 0, 0, 0, 0, 0, 0, 0 }, -- eggs you own, by rarity 1..8
 		pets = {}, -- equipped pets in your pen: { rarity = 1..8, kind = 1 or 2 }
 		stash = {}, -- pets in storage
+		placedEggs = {}, -- eggs sitting in your pen: { rarity = 1..8, x = .., z = .. (spot in the pen), hatchAt = os.time() }
 		rebirths = 0,
 		penLevel = 0,
 		class = "Knight",
@@ -56,9 +64,18 @@ local function keyFor(player)
 end
 
 function DataService.Load(player)
+	if not store then
+		local data = defaults()
+		data._noSave = true
+		profiles[player] = data
+		return data
+	end
 	local ok, result = pcall(function()
 		return store:GetAsync(keyFor(player))
 	end)
+	if not player.Parent then
+		return nil -- the player left while we were loading
+	end
 	local data
 	if ok and type(result) == "table" then
 		data = reconcile(result, defaults())
@@ -75,12 +92,12 @@ end
 
 function DataService.Save(player)
 	local data = profiles[player]
-	if not data or data._noSave then
+	if not data or data._noSave or not store then
 		return
 	end
 	data.lastSave = os.time()
 	local ok, err = pcall(function()
-		store:SetAsync(keyFor(player), data)
+		store:SetAsync(keyFor(player), data, { player.UserId })
 	end)
 	if not ok then
 		warn("[DataService] could not save " .. player.Name .. ": " .. tostring(err))

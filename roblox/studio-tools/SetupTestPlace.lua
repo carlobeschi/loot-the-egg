@@ -5,6 +5,7 @@
     - Workspace.TownZone (an invisible safe area around the middle of the map)
     - ServerStorage.Enemies with Zombie, Runner, Tank and Boss rigs
   Running it again deletes and rebuilds those three things. It does not touch your scripts.
+  The test tower (Dungeon 1, south of the town) is NOT built here: TowerService builds it when you press Play.
 ]]
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
@@ -121,6 +122,10 @@ local function makeRig(name, color, scale)
 		rig.PrimaryPart = root
 	end
 	rig.Name = name
+	local bodyColors = rig:FindFirstChildOfClass("BodyColors")
+	if bodyColors then
+		bodyColors:Destroy() -- otherwise it overrides the colors below
+	end
 	for _, d in ipairs(rig:GetDescendants()) do
 		if d:IsA("BasePart") then
 			d.Color = color

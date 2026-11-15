@@ -7,6 +7,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
+for _, name in ipairs({ "EquipBest", "Rebirth", "SetShowPets", "ChooseClass", "State", "Notice" }) do
+	remotes:WaitForChild(name)
+end
 
 local showPets = true
 
@@ -47,10 +50,10 @@ local function button(text, order, color, callback)
 end
 
 local info = label(gui, UDim2.fromOffset(330, 40), UDim2.fromOffset(14, 14), "Loading...")
+local info2 = label(gui, UDim2.fromOffset(330, 30), UDim2.fromOffset(14, 60), "")
 local notice = label(gui, UDim2.fromOffset(520, 36), UDim2.new(0.5, -260, 0, 14), "")
 notice.Visible = false
 
-button("Hatch (nest)", -1, Color3.fromRGB(111, 209, 111), function() remotes.Hatch:FireServer() end)
 button("Equip Best", 0, Color3.fromRGB(255, 211, 74), function() remotes.EquipBest:FireServer() end)
 local rebirthButton = button("Rebirth", 1, Color3.fromRGB(255, 154, 208), function() remotes.Rebirth:FireServer() end)
 
@@ -79,6 +82,24 @@ closeButton.TextScaled = true
 closeButton.Parent = panel
 Instance.new("UICorner", closeButton)
 closeButton.MouseButton1Click:Connect(function() panel.Visible = false end)
+
+-- class picker (choosing a class respawns your weapon with that class's health and speed)
+local classColors = { Knight = Color3.fromRGB(217, 178, 90), Wizard = Color3.fromRGB(157, 143, 255), Bowman = Color3.fromRGB(127, 192, 108) }
+for i, className in ipairs({ "Knight", "Wizard", "Bowman" }) do
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.fromOffset(104, 36)
+	b.Position = UDim2.new(0, 14 + (i - 1) * 112, 1, -50)
+	b.BackgroundColor3 = classColors[className]
+	b.TextColor3 = Color3.new(0, 0, 0)
+	b.Font = Enum.Font.FredokaOne
+	b.TextScaled = true
+	b.Text = className
+	b.Parent = gui
+	Instance.new("UICorner", b)
+	b.MouseButton1Click:Connect(function()
+		remotes.ChooseClass:FireServer(className)
+	end)
+end
 
 button("Settings", 2, Color3.fromRGB(154, 208, 255), function() panel.Visible = not panel.Visible end)
 
@@ -128,6 +149,11 @@ local firstState = true
 remotes.State.OnClientEvent:Connect(function(s)
 	info.Text = "Coins " .. math.floor(s.coins) .. "   +" .. math.floor(s.income) .. "/s  (x" .. s.multiplier .. ")   Pets " .. s.pets .. "/" .. s.capacity
 	rebirthButton.Text = "Rebirth x" .. s.multiplier
+	local eggCount = 0
+	for _, n in ipairs(s.eggs or {}) do
+		eggCount += n
+	end
+	info2.Text = s.class .. " - " .. s.weapon .. "   Eggs in backpack " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
 	if firstState then
 		showPets = s.showPets
 		firstState = false

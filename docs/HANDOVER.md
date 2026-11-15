@@ -39,7 +39,7 @@ Recent balance change: World 1 bosses nerfed (health about -20%, hit about -25%,
 
 ## 4. Roblox port
 
-State: economy, pets, pen plots, saving (DataStore), egg loop, HUD are written. NOT written: combat and weapons, towers, boss moves, shop and World Gate screens, the map itself. No script has ever run in Studio (no Luau runtime was available), so expect small errors.
+State: economy, pets, pen plots, saving (DataStore), egg loop, HUD, combat (`CombatService`, `ClientCombat`), one generated test tower (`TowerService`), eggs as backpack items you place and hatch in your pen (`EggService`, `ClientEggs`), and boss slam, summon and enrage are written. NOT written: boss charge, class abilities, more towers with locked doors, shop and World Gate screens, real models. No script has ever run in Studio, so expect small errors. In cloud sessions, downloading or building Luau tools (luau-analyze, luau-lsp, selene) was blocked, so `tools/lua_check.js` (part of `npm test`) only checks that blocks and brackets balance. Test cheats go through `ServerStorage.Cheat` (Studio only), because the Command Bar gets its own copy of required modules.
 
 Workflow: `rojo serve` in `roblox/`, connect from the Studio plugin, edit files in `src/` with Claude Code, never in Studio. Rojo manages scripts only. Build the test map with `studio-tools/SetupTestPlace.lua` (Command Bar), cheats in `TestCheats.lua`. Numbers come from the JS game: `npm run export:roblox`.
 

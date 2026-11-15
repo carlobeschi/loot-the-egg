@@ -21,8 +21,13 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/ServerScriptService/PlotService.lua` | ServerScriptService > ModuleScript | Gives each player a plot, builds the pen look, spawns their pets |
 | `src/ServerScriptService/PetService.lua` | ServerScriptService > ModuleScript | Hatching, equip best, selling, pen upgrades, rebirth, World Gate |
 | `src/ServerScriptService/DungeonService.lua` | ServerScriptService > ModuleScript | Enemies, boss defeated, egg drop, taking the egg wakes everything, banking it in town |
+| `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow: gives your weapon, works out hits on the server |
+| `src/ServerScriptService/EggService.lua` | ServerScriptService > ModuleScript | Eggs as backpack items; placing them in your pen; countdown and hatching |
+| `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds the test tower (Dungeon 1) from Parts, fills it with enemies and a boss when you walk in |
 | `src/ServerScriptService/Main.server.lua` | ServerScriptService > **Script** named `Main` | Starts everything, makes the RemoteEvents, runs the coin income loop |
-| `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Hatch, Equip Best, Rebirth, Settings with "Show my pets" |
+| `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Equip Best, Rebirth, class picker, Settings with "Show my pets" |
+| `src/StarterPlayer/StarterPlayerScripts/ClientEggs.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows where an egg will go and places it when you click in your pen |
+| `src/StarterPlayer/StarterPlayerScripts/ClientCombat.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Sends your aim to the server when you click with your weapon |
 | `studio-tools/SetupTestPlace.lua`, `TestCheats.lua` | Pasted into Studio's Command Bar, never synced | Builds a test map; testing cheats |
 | `tools/export_config.js` | Stays on your computer | Re-creates `ConfigData.lua` from the JavaScript game |
 | `default.project.json` | Used by Rojo | Tells Rojo which folder goes to which Studio service |
@@ -95,17 +100,18 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 ## Not done yet (suggested order)
 
-1. **Combat:** Tools for the sword, staff and bow. On a hit, fire a RemoteEvent and let the server deal damage = base x `Config.weaponDamage` x the enemy's `Armor` attribute. Set `LastHitBy` on the enemy so `DungeonService.OnBossDefeated` knows who gets the egg.
-2. **Dungeon towers:** build one tower in Studio with stairs, copy it for the other depths, give each a `Depth` attribute and a locked gate. After a boss falls, open the gate of the dungeon with Depth + 1.
-3. **Boss moves:** the JS boss has a ground slam (red warning ring, then damage), summons helpers, and enrages below half health. Rebuild those as a loop on the Boss rig: telegraph, wait about 1 second, then damage players inside the ring.
-4. **Real models:** swap the Part-built pets for models in `ServerStorage.PetModels`. Add the pen sign pad (upgrade pen), the shop and the blacksmith as proximity prompts or touch pads that open ScreenGuis.
-5. **The rest:** rebirth and World Gate screens in the HUD, egg visuals, sound, and music.
+Done so far: combat (sword, staff, bow in `CombatService`), one generated test tower with a boss (`TowerService`), boss slam, summons and enrage (`DungeonService`). Still to do:
 
-If you want, I can write any of these next, one at a time, starting with whichever you pick.
+1. **First Play test** and fixing the errors it shows (nothing here has run in Studio yet).
+2. **Boss charge** (the JS `chargeAI`) and the class abilities (Shield Slam, Blink Burst, Arrow Volley).
+3. **More towers:** call `TowerService.Build` for depths 2 to 9 and lock each door until `profile.bestDepth >= depth - 1`. Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
+4. **Shops and screens:** blacksmith (buy weapon tiers), upgrades, pen sign pad (upgrade pen), World Gate. Proximity prompts that open ScreenGuis.
+5. **Real models, egg visuals, sound and music.**
 
 ## Testing it (see also `studio-tools/SetupTestPlace.lua` and `TestCheats.lua`)
 
 1. Paste `studio-tools/SetupTestPlace.lua` into View > Command Bar (in Edit mode) to build the 8 plots, the TownZone and the enemy rigs for you.
 2. Add the scripts from the table above, then press **Test > Play** and look at the Output window (View > Output) for red errors.
 3. Use **Test > Server & Clients** with 2 clients to check that each player gets their own plot.
-4. While playing, use the Client/Server toggle to switch to Server view and paste a snippet from `TestCheats.lua` to give yourself coins and eggs.
+4. While playing, use the Client/Server toggle to switch to Server view and paste a line from `TestCheats.lua` to give yourself coins, eggs, a better weapon or a boss.
+5. Walk south from the spawn to the tower marked "Dungeon 1". Stepping through the door fills it with enemies. Click to attack. Beat the boss on the top floor, take the egg (everything wakes up) and run back to the middle of the map to bank it. The egg appears in your backpack (bottom of the screen): equip it, click inside your pen to place it, wait for "Ready!" and press E next to it to hatch it.
