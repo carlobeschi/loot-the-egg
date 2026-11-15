@@ -21,7 +21,7 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/ServerScriptService/PlotService.lua` | ServerScriptService > ModuleScript | Gives each player a plot, builds the pen look, spawns their pets |
 | `src/ServerScriptService/PetService.lua` | ServerScriptService > ModuleScript | Hatching, equip best, selling, pen upgrades, rebirth, World Gate |
 | `src/ServerScriptService/DungeonService.lua` | ServerScriptService > ModuleScript | Enemies, boss defeated, egg drop, taking the egg wakes everything, banking it in town |
-| `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow: gives your weapon, works out hits on the server |
+| `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow, and the Q abilities: gives your weapon, works out hits on the server |
 | `src/ServerScriptService/EggService.lua` | ServerScriptService > ModuleScript | Eggs as backpack items; placing them in your pen; countdown and hatching |
 | `src/ServerScriptService/ShopService.lua` | ServerScriptService > ModuleScript | Builds the town huts (Blacksmith, Trainer, World Gate), pen sign prompts, and does the buying |
 | `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds Dungeons 1 to 9 from Parts with gates, fills a tower with enemies and a boss when you walk in |
@@ -103,12 +103,12 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 ## Not done yet (suggested order)
 
-Done so far: combat (sword, staff, bow in `CombatService`), one generated test tower with a boss (`TowerService`), boss slam, summons and enrage (`DungeonService`). Still to do:
+Done so far: combat and Q abilities (`CombatService`), Dungeons 1 to 9 with gates (`TowerService`), boss slam, charge, summons and enrage (`DungeonService`), eggs as backpack items (`EggService`), shops and screens (`ShopService`). Still to do:
 
-1. **First Play test** and fixing the errors it shows (nothing here has run in Studio yet).
-2. **Class abilities** (Shield Slam, Blink Burst, Arrow Volley).
-3. **World 2** map and its towers (depths 10 to 18). Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
-5. **Real models, egg visuals, sound and music.**
+1. **Play-test every slice** in Studio (`docs/TESTING.md`) and fix what shows up.
+2. **World 2** map and its towers (depths 10 to 18). Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
+3. **Real models, egg visuals, sound and music.**
+4. **Private publish** for up to 10 early testers, then the content questionnaire (see `docs/HANDOVER.md`).
 
 ## Checking the scripts without Studio
 

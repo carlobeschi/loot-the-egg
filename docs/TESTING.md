@@ -40,3 +40,10 @@ Cheats (Studio only): switch to **Server** view, open View > Command Bar, and ru
 - [ ] Beating Dungeon 1's boss says "Dungeon 2 is open now!" and its gate turns green.
 - [ ] Deeper dungeons have more floors (up to 4) and tougher enemies.
 - [ ] The boss sometimes shows a red strip on the floor and then dashes along it; getting hit knocks you back.
+
+## Slice 5: class abilities
+- [ ] Press Q (or the Ability button on a phone, Y on a controller). The button counts down the cooldown (7 s,
+      shorter with Trainer "Ability" levels).
+- [ ] Knight, Shield Slam: a gold ring, nearby enemies get hurt and pushed back (the boss only a little).
+- [ ] Wizard, Blink Burst: a purple blast where you stand, then you jump forward; you never go through walls.
+- [ ] Bowman, Arrow Volley: a fan of 7 arrows (more with Ability levels) that each go through 2 enemies.

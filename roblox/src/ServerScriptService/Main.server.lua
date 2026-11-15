@@ -39,7 +39,8 @@ local R = {
 	BuyWeapon = makeRemote("BuyWeapon"), -- client -> server: class name
 	BuyUpgrade = makeRemote("BuyUpgrade"), -- client -> server: "health" | "speed" | "ability"
 	OpenWindow = makeRemote("OpenWindow"), -- server -> client: "Weapons" | "Upgrades" | "WorldGate" | "Pen" -- client -> server: (rarity, spot clicked in the pen)
-	Attack = makeRemote("Attack"), -- client -> server: "I attacked, aiming this way"
+	Attack = makeRemote("Attack"),
+	Ability = makeRemote("Ability"), -- client -> server: "I used my ability, aiming this way" -- client -> server: "I attacked, aiming this way"
 	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman"
 	State = makeRemote("State"), -- server -> client: your numbers for the HUD
 	Notice = makeRemote("Notice"), -- server -> client: a message to show
@@ -144,6 +145,9 @@ R.PlaceEgg.OnServerEvent:Connect(function(player, rarity, position)
 end)
 R.Attack.OnServerEvent:Connect(function(player, aim)
 	CombatService.Attack(player, aim) -- CombatService checks the cooldown itself
+end)
+R.Ability.OnServerEvent:Connect(function(player, aim)
+	CombatService.Ability(player, aim) -- checks its own cooldown
 end)
 R.ChooseClass.OnServerEvent:Connect(function(player, className)
 	if allowed(player, "ChooseClass", 1) and type(className) == "string" and CombatService.SetClass(player, className) then
