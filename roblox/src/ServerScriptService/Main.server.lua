@@ -257,6 +257,15 @@ if RunService:IsStudio() then
 			profile.world2Unlocked = true -- skip the World Gate requirements
 		elseif command == "depth2" then
 			profile.bestDepth2 = math.clamp(value or 9, 0, 9) -- World 2: 1 = Dungeon 10 beaten
+		elseif command == "kill" then
+			-- defeat every enemy in Dungeon <value> as if you hit them (the boss drops its egg as usual)
+			local tower = workspace:FindFirstChild("Towers") and workspace.Towers:FindFirstChild("Tower" .. tostring(value))
+			if not tower then
+				return "no Tower" .. tostring(value)
+			end
+			for _, enemy in ipairs(tower.Enemies:GetChildren()) do
+				DungeonService.DamageEnemy(enemy, 1e9, player)
+			end
 		elseif command == "travel" then
 			World2Service.Travel(player, value or 2)
 		elseif command == "profile" then
