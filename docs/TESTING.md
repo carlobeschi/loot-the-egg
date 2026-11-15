@@ -32,3 +32,11 @@ Cheats (Studio only): switch to **Server** view, open View > Command Bar, and ru
 - [ ] World Gate shows the four requirements. Cheats for a quick check: `Invoke("rebirths", 5)`, `Invoke("pen", 7)`,
       `Invoke("coins", 20000000)` and a Mythic pet (hatch eggs from `Invoke("eggs", 2)`). Then Unlock, and the
       Blacksmith sells up to tier 11.
+
+## Slice 4: Dungeons 1 to 9, locked doors, boss charge
+- [ ] Nine towers south of town: Dungeons 1 to 5 in the first row, 6 to 9 further south. Signs say "Dungeon N".
+- [ ] On a new save only Dungeon 1's gate is green; the others are red and solid, and walking in says
+      "Dungeon N is locked". Cheat: `Invoke("depth", 4)` opens Dungeons 1 to 5.
+- [ ] Beating Dungeon 1's boss says "Dungeon 2 is open now!" and its gate turns green.
+- [ ] Deeper dungeons have more floors (up to 4) and tougher enemies.
+- [ ] The boss sometimes shows a red strip on the floor and then dashes along it; getting hit knocks you back.

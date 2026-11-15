@@ -176,6 +176,16 @@ Config.Boss = {
 	summonEveryEnraged = 500 / 60,
 	summonCount = 2,
 	maxHelpers = 12,
+	-- charge: a red strip shows where the boss will run, then it dashes along it (chargeAI in the JS game)
+	chargeEvery = { [1] = 520 / 60, [2] = 420 / 60 },
+	chargeEveryEnraged = { [1] = 300 / 60, [2] = 260 / 60 },
+	chargeWarning = 40 / 60,
+	chargeTime = 24 / 60,
+	chargeSpeed = 600 / 9, -- studs per second while charging
+	chargeMinDistance = 110 / 9, -- only charges at players this far away or more
+	chargeMaxDistance = 420 / 9,
+	chargeWidth = 46 / 9,
+	chargeDamage = 1.1, -- times the boss damage
 	enrageAt = 0.5, -- below half health
 	enrageSpeed = 1.25,
 	enrageDamage = 1.15,

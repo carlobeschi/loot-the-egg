@@ -11,7 +11,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 
 local TowerService = {}
-local DungeonService
+local DungeonService, DataService
+local notify = function(_player, _text) end
 
 local SIZE = 34 -- tower width and depth in studs
 local WALL = 1 -- wall thickness
@@ -113,6 +114,13 @@ function TowerService.Build(origin, depth, world, parent)
 	entry.CanCollide = false
 	entry.CanQuery = false
 
+	-- the gate in the doorway. Locked or open is different for every player (it depends on which dungeons
+	-- they have beaten), so ClientTowers colors it and makes it solid on each player's own screen.
+	-- The server also checks at the Entry pad, so nobody can sneak past it.
+	local gate = block(model, "Gate", Vector3.new(DOOR_W, DOOR_H, 0.6), base * CFrame.new(0, DOOR_H / 2, -half - 0.4), Color3.fromRGB(255, 80, 80), Enum.Material.ForceField)
+	gate.CanCollide = false
+	gate.Transparency = 0.3
+
 	-- a sign over the door
 	local sign = block(model, "Sign", Vector3.new(DOOR_W + 4, 3, 0.4), base * CFrame.new(0, DOOR_H + 2.5, -half - 0.3), Color3.fromRGB(60, 40, 25), Enum.Material.Wood)
 	local gui = Instance.new("SurfaceGui")
@@ -192,30 +200,72 @@ function TowerService.Fill(model, origin, depth, world, floors)
 	end
 end
 
+-- Dungeon N opens after you beat Dungeon N-1 (Dungeon 1 is always open). World 2 counts from depth 10.
+function TowerService.IsUnlocked(player, depth, world)
+	local profile = DataService.Get(player)
+	if not profile then
+		return false
+	end
+	if world == 2 then
+		return profile.world2Unlocked and profile.bestDepth2 >= depth - 10
+	end
+	return profile.bestDepth >= depth - 1
+end
+
 function TowerService.Watch(model, origin, depth, world, floors)
 	model:SetAttribute("Active", false)
 	local entry = model:FindFirstChild("Entry")
+	local lastWarned = {}
 	entry.Touched:Connect(function(hit)
-		if model:GetAttribute("Active") then
+		local player = Players:GetPlayerFromCharacter(hit.Parent)
+		if not player then
 			return
 		end
-		if Players:GetPlayerFromCharacter(hit.Parent) then
+		if not TowerService.IsUnlocked(player, depth, world) then
+			-- put them back outside the door
+			local root = hit.Parent:FindFirstChild("HumanoidRootPart")
+			if root then
+				root.CFrame = CFrame.new(origin + Vector3.new(0, 4, -SIZE / 2 - 6)) * CFrame.Angles(0, math.pi, 0)
+			end
+			if os.clock() - (lastWarned[player] or 0) > 2 then
+				lastWarned[player] = os.clock()
+				notify(player, "Dungeon " .. depth .. " is locked. Beat Dungeon " .. (depth - 1) .. " first!")
+			end
+			return
+		end
+		if not model:GetAttribute("Active") then
 			model:SetAttribute("Active", true)
 			TowerService.Fill(model, origin, depth, world, floors)
 		end
 	end)
 end
 
-function TowerService.Init(dungeonService)
+-- Where the World 1 dungeons stand: two rows south of the town, the deeper ones further away.
+local WORLD1_SPOTS = {
+	Vector3.new(0, 0, -150), -- Dungeon 1
+	Vector3.new(120, 0, -150),
+	Vector3.new(-120, 0, -150),
+	Vector3.new(240, 0, -150),
+	Vector3.new(-240, 0, -150),
+	Vector3.new(60, 0, -290),
+	Vector3.new(-60, 0, -290),
+	Vector3.new(180, 0, -290),
+	Vector3.new(-180, 0, -290), -- Dungeon 9
+}
+
+function TowerService.Init(dungeonService, dataService, notifyFunction)
 	DungeonService = dungeonService
-	-- the test tower: Dungeon 1, south of the town. Move or add towers here.
+	DataService = dataService
+	notify = notifyFunction or notify
 	local folder = workspace:FindFirstChild("Towers")
 	if not folder then
 		folder = Instance.new("Folder")
 		folder.Name = "Towers"
 		folder.Parent = workspace
 	end
-	TowerService.Build(Vector3.new(0, 0, -150), 1, 1, folder)
+	for depth, spot in ipairs(WORLD1_SPOTS) do
+		TowerService.Build(spot, depth, 1, folder)
+	end
 end
 
 return TowerService

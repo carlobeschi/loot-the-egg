@@ -57,7 +57,7 @@ PlotService.Init()
 PetService.Init(DataService, PlotService)
 DungeonService.Init(DataService, PetService, notice)
 CombatService.Init(DataService, DungeonService)
-TowerService.Init(DungeonService)
+TowerService.Init(DungeonService, DataService, notice)
 EggService.Init(DataService, PlotService, PetService, notice)
 ShopService.Init(DataService, PlotService, CombatService, R.OpenWindow, notice)
 
@@ -237,6 +237,8 @@ if RunService:IsStudio() then
 			if root then
 				DungeonService.SpawnEnemy(root.CFrame * CFrame.new(0, 4, -25), value or 1, 0, "boss", 1, workspace, nil, true)
 			end
+		elseif command == "depth" then
+			profile.bestDepth = math.clamp(value or 9, 0, 9) -- pretend you beat dungeons 1..value
 		elseif command == "profile" then
 			return profile
 		else
@@ -274,6 +276,8 @@ while true do
 				maxWeaponTier = Config.maxWeaponTier(profile.world2Unlocked),
 				upgrades = profile.upgrades[profile.class],
 				bestPet = PetService.BestRarity(profile),
+				bestDepth = profile.bestDepth,
+				bestDepth2 = profile.bestDepth2,
 			})
 		end
 	end

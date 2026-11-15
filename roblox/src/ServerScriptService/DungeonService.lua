@@ -265,7 +265,66 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 	local enraged = false
 	local nextSlam = os.clock() + B.slamEvery[world]
 	local nextSummon = os.clock() + B.summonEvery
+	local nextCharge = os.clock() + B.chargeEvery[world]
 	local helpers = {}
+
+	local function restoreSpeed()
+		humanoid.WalkSpeed = boss:GetAttribute("BaseWalkSpeed") * (workspace:GetAttribute("Aggro") and Config.AggroSpeedBoost or 1)
+	end
+
+	-- the charge: telegraph with a red strip, then dash in a straight line, hurting the first time it touches you
+	local function charge(target)
+		local flat = Vector3.new(target.Position.X - root.Position.X, 0, target.Position.Z - root.Position.Z)
+		if flat.Magnitude < 0.1 then
+			return
+		end
+		local direction = flat.Unit
+		local length = B.chargeSpeed * B.chargeTime
+		boss:SetAttribute("Busy", true)
+		humanoid:MoveTo(root.Position)
+		local floorY = root.Position.Y - humanoid.HipHeight - root.Size.Y / 2 + 0.2
+		local start = Vector3.new(root.Position.X, floorY, root.Position.Z)
+		local strip = Instance.new("Part")
+		strip.Name = "ChargeWarning"
+		strip.Size = Vector3.new(B.chargeWidth, 0.3, length)
+		strip.CFrame = CFrame.lookAt(start, start + direction) * CFrame.new(0, 0, -length / 2)
+		strip.Anchored = true
+		strip.CanCollide = false
+		strip.CanQuery = false
+		strip.CanTouch = false
+		strip.Material = Enum.Material.Neon
+		strip.Color = Color3.fromRGB(255, 42, 42)
+		strip.Transparency = 0.5
+		strip.Parent = workspace
+		Debris:AddItem(strip, B.chargeWarning + 0.1)
+		task.wait(B.chargeWarning)
+		if humanoid.Health <= 0 then
+			return
+		end
+		humanoid.WalkSpeed = B.chargeSpeed
+		humanoid:MoveTo(root.Position + direction * length)
+		local hitAlready = {}
+		local stopAt = os.clock() + B.chargeTime
+		while os.clock() < stopAt and humanoid.Health > 0 do
+			for _, player in ipairs(Players:GetPlayers()) do
+				local character = player.Character
+				local proot = character and character:FindFirstChild("HumanoidRootPart")
+				if proot and not hitAlready[player] then
+					local offset = proot.Position - root.Position
+					if Vector3.new(offset.X, 0, offset.Z).Magnitude < root.Size.X + 2 and math.abs(offset.Y) < Config.FloorHeight * 0.5 then
+						hitAlready[player] = true
+						if hurtPlayer(character, boss:GetAttribute("Damage") * B.chargeDamage) then
+							proot.AssemblyLinearVelocity += direction * 50 + Vector3.new(0, 25, 0)
+						end
+					end
+				end
+			end
+			task.wait(0.05)
+		end
+		restoreSpeed()
+		humanoid:MoveTo(root.Position)
+		boss:SetAttribute("Busy", false)
+	end
 
 	while boss.Parent and humanoid.Health > 0 do
 		task.wait(0.1)
@@ -316,6 +375,15 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 			boss:SetAttribute("Busy", false)
 		end
 
+		if target and now >= nextCharge and not boss:GetAttribute("Busy") then
+			local d = Vector3.new(target.Position.X - root.Position.X, 0, target.Position.Z - root.Position.Z).Magnitude
+			if d > B.chargeMinDistance and d < B.chargeMaxDistance then
+				nextCharge = now + (enraged and B.chargeEveryEnraged[world] or B.chargeEvery[world])
+				charge(target)
+				now = os.clock()
+			end
+		end
+
 		if target and now >= nextSummon then
 			nextSummon = now + (enraged and B.summonEveryEnraged or B.summonEvery)
 			for i = #helpers, 1, -1 do
@@ -346,14 +414,18 @@ function DungeonService.OnBossDefeated(player, depth, world, position)
 	if not profile then
 		return
 	end
+	local firstTime
 	if world == 2 then
+		firstTime = depth - 9 > profile.bestDepth2
 		profile.bestDepth2 = math.max(profile.bestDepth2, depth - 9)
 	else
+		firstTime = depth > profile.bestDepth
 		profile.bestDepth = math.max(profile.bestDepth, depth)
 	end
 	local rarity = Config.rollEgg(depth)
 	DungeonService.SpawnEgg(position, rarity)
-	notify(player, "The boss is down! Grab the " .. Data.rarities[rarity] .. " egg and run home!")
+	local opened = (firstTime and depth ~= 9 and depth < 18) and (" Dungeon " .. (depth + 1) .. " is open now!") or ""
+	notify(player, "The boss is down! Grab the " .. Data.rarities[rarity] .. " egg and run home!" .. opened)
 	return rarity
 end
 
