@@ -4,22 +4,20 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local DataService = require(ServerScriptService:WaitForChild("DataService"))
 local PlotService = require(ServerScriptService:WaitForChild("PlotService"))
 local PetService = require(ServerScriptService:WaitForChild("PetService"))
 local DungeonService = require(ServerScriptService:WaitForChild("DungeonService"))
+local CombatService = require(ServerScriptService:WaitForChild("CombatService"))
+local TowerService = require(ServerScriptService:WaitForChild("TowerService"))
 
-DataService.Init()
-PlotService.Init()
-PetService.Init(DataService, PlotService)
-DungeonService.Init(DataService, PetService)
-
--- ---------- remotes ----------
+-- ---------- remotes (made first, so the client never waits on a service that is still starting) ----------
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
-remotes.Parent = ReplicatedStorage
 local function makeRemote(name)
 	local r = Instance.new("RemoteEvent")
 	r.Name = name
@@ -35,9 +33,25 @@ local R = {
 	UnlockWorld2 = makeRemote("UnlockWorld2"),
 	Collect = makeRemote("Collect"),
 	SetShowPets = makeRemote("SetShowPets"),
+	Attack = makeRemote("Attack"), -- client -> server: "I attacked, aiming this way"
+	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman"
 	State = makeRemote("State"), -- server -> client: your numbers for the HUD
 	Notice = makeRemote("Notice"), -- server -> client: a message to show
 }
+remotes.Parent = ReplicatedStorage -- parent last, so the client sees every remote at once
+
+local function notice(player, text)
+	if player and text then
+		R.Notice:FireClient(player, text)
+	end
+end
+
+DataService.Init()
+PlotService.Init()
+PetService.Init(DataService, PlotService)
+DungeonService.Init(DataService, PetService, notice)
+CombatService.Init(DataService, DungeonService)
+TowerService.Init(DungeonService)
 
 -- Basic anti-spam: each player can use each action at most once per `gap` seconds.
 local lastUse = {}
@@ -49,10 +63,6 @@ local function allowed(player, key, gap)
 	end
 	lastUse[player][key] = now
 	return true
-end
-
-local function notice(player, text)
-	R.Notice:FireClient(player, text)
 end
 
 local function result(player, ok, message)
@@ -107,6 +117,14 @@ R.Collect.OnServerEvent:Connect(function(player)
 		if n > 0 then notice(player, "Collected " .. n .. " coins!") end
 	end
 end)
+R.Attack.OnServerEvent:Connect(function(player, aim)
+	CombatService.Attack(player, aim) -- CombatService checks the cooldown itself
+end)
+R.ChooseClass.OnServerEvent:Connect(function(player, className)
+	if allowed(player, "ChooseClass", 1) and type(className) == "string" and CombatService.SetClass(player, className) then
+		notice(player, "You are now a " .. className .. "!")
+	end
+end)
 R.SetShowPets.OnServerEvent:Connect(function(player, value)
 	local profile = DataService.Get(player)
 	if profile and type(value) == "boolean" then
@@ -117,6 +135,9 @@ end)
 -- ---------- players joining / leaving ----------
 local function onJoin(player)
 	local profile = DataService.Load(player)
+	if not profile or not player.Parent then
+		return -- left while loading
+	end
 	local plot = PlotService.Assign(player)
 	if plot then
 		PlotService.ApplyPenStyle(player, profile.penLevel)
@@ -124,18 +145,26 @@ local function onJoin(player)
 		local pad = plot:FindFirstChild("CollectPad")
 		if pad then
 			pad.Touched:Connect(function(hit)
-				if Players:GetPlayerFromCharacter(hit.Parent) == player then
-					PetService.Collect(player)
+				if Players:GetPlayerFromCharacter(hit.Parent) == player and allowed(player, "Pad", 1) then
+					local n = PetService.Collect(player)
+					if n > 0 then
+						notice(player, "Collected " .. n .. " coins!")
+					end
 				end
 			end)
 		end
+	else
+		notice(player, "This server has no free plot for you.")
 	end
-	player.CharacterAdded:Connect(function()
+	local function onCharacter(character)
+		character:WaitForChild("Humanoid", 10)
 		task.wait(0.5)
 		PlotService.TeleportToPlot(player)
-	end)
+		CombatService.Equip(player)
+	end
+	player.CharacterAdded:Connect(onCharacter)
 	if player.Character then
-		PlotService.TeleportToPlot(player)
+		task.spawn(onCharacter, player.Character)
 	end
 end
 
@@ -147,6 +176,48 @@ Players.PlayerRemoving:Connect(function(player)
 	PlotService.Release(player)
 	lastUse[player] = nil
 end)
+
+-- ---------- Studio-only test cheats (see studio-tools/TestCheats.lua) ----------
+-- The Command Bar can't reach this script's data directly, so it calls this BindableFunction instead.
+if RunService:IsStudio() then
+	local cheat = Instance.new("BindableFunction")
+	cheat.Name = "Cheat"
+	cheat.OnInvoke = function(command, value)
+		local player = Players:GetPlayers()[1]
+		local profile = player and DataService.Get(player)
+		if not profile then
+			return "no player yet"
+		end
+		if command == "coins" then
+			profile.coins += value or 1000000
+		elseif command == "eggs" then
+			for rarity = 1, 8 do
+				profile.eggs[rarity] += value or 2
+			end
+		elseif command == "pen" then
+			profile.penLevel = math.clamp(value or 7, 0, Config.MaxPenLevel)
+			PlotService.ApplyPenStyle(player, profile.penLevel)
+		elseif command == "rebirths" then
+			profile.rebirths = math.clamp(value or 5, 0, Config.MaxRebirths)
+		elseif command == "weapon" then
+			profile.weaponTier[profile.class] = math.clamp(value or 5, 0, 11)
+			CombatService.Equip(player)
+		elseif command == "class" then
+			CombatService.SetClass(player, value)
+		elseif command == "boss" then
+			local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+			if root then
+				DungeonService.SpawnEnemy(root.CFrame * CFrame.new(0, 4, -25), value or 1, 0, "boss", 1, workspace, nil, true)
+			end
+		elseif command == "profile" then
+			return profile
+		else
+			return "unknown command " .. tostring(command)
+		end
+		return "ok"
+	end
+	cheat.Parent = ServerStorage
+end
 
 -- ---------- income loop and HUD updates ----------
 while true do
@@ -167,6 +238,10 @@ while true do
 				capacity = Config.penCapacity(profile.penLevel),
 				world2 = profile.world2Unlocked,
 				showPets = profile.showPets,
+				class = profile.class,
+				weapon = Config.weaponInfo(profile.class, profile.weaponTier[profile.class] or 0).name,
+				eggs = profile.eggs,
+				carrying = player:GetAttribute("CarryingEgg"),
 			})
 		end
 	end
