@@ -13,6 +13,7 @@ local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Sounds = require(ReplicatedStorage.Config:WaitForChild("Sounds"))
 
 local CombatService = {}
 local DataService, DungeonService
@@ -320,6 +321,7 @@ function CombatService.Attack(player, aim)
 	local tier = tool:GetAttribute("Tier") or 0
 	local origin = root.Position
 
+	Sounds.PlayAt(className == "Knight" and "swingKnight" or className == "Wizard" and "castWizard" or "shootBowman", root)
 	if className == "Knight" then
 		swordSwing(player, origin, direction, tier)
 	elseif className == "Wizard" then
@@ -357,6 +359,7 @@ function CombatService.Ability(player, aim)
 	direction = Vector3.new(direction.X, 0, direction.Z).Unit
 	local tier = profile.weaponTier[className] or 0
 	local origin = root.Position
+	Sounds.PlayAt(className == "Knight" and "shieldSlam" or className == "Wizard" and "blink" or "volley", origin)
 
 	if className == "Knight" then
 		local radius = (100 + level * 6) / 9

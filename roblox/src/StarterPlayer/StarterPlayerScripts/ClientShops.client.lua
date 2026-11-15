@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Data = Config.Data
+local Sounds = require(ReplicatedStorage.Config:WaitForChild("Sounds"))
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -109,7 +110,12 @@ local function row(order, text, buttonText, enabled, onClick)
 		b.Text = buttonText
 		b.Parent = r
 		Instance.new("UICorner", b)
-		b.MouseButton1Click:Connect(onClick)
+		b.MouseButton1Click:Connect(function()
+			if enabled then
+				Sounds.PlayLocal("buy")
+			end
+			onClick()
+		end)
 	end
 end
 

@@ -51,6 +51,7 @@ local function defaults()
 		bestDepth2 = 0, -- World 2 progress (depth 10 counts as 1)
 		world2Unlocked = false,
 		showPets = true,
+		soundOn = true, -- music and sound effects (the Settings switch)
 		lastSave = 0,
 	}
 end

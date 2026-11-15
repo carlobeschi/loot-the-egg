@@ -38,6 +38,10 @@ function PlotService.Init()
 	end
 	for _, plot in ipairs(folder:GetChildren()) do
 		if plot:IsA("Model") then
+			-- for the minimap (far plots aren't streamed to the client, their Model and its attributes are)
+			local cframe, size = plot:GetBoundingBox()
+			plot:SetAttribute("Center", cframe.Position)
+			plot:SetAttribute("Extent", Vector3.new(size.X, 0, size.Z))
 			owners[plot] = false
 			setSign(plot, "Open Plot")
 		end

@@ -17,6 +17,7 @@ local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Data = Config.Data
+local Sounds = require(ReplicatedStorage.Config:WaitForChild("Sounds"))
 
 local DungeonService = {}
 local DataService, PetService
@@ -76,6 +77,10 @@ function DungeonService.Init(dataService, petService, notifyFunction)
 	-- Reaching a town banks the egg. Every part tagged "TownZone" counts: the World 1 one from the place
 	-- (Workspace.TownZone, tagged here) and the World 2 one that World2Service builds.
 	local function watchTown(town)
+		-- for the minimap: each world's town, kept on Workspace because far parts aren't streamed to clients
+		local world = (town.Position - Config.World2Origin).Magnitude < 1000 and 2 or 1
+		workspace:SetAttribute("Town" .. world .. "Center", town.Position)
+		workspace:SetAttribute("Town" .. world .. "Extent", Vector3.new(town.Size.X, 0, town.Size.Z))
 		town.Touched:Connect(function(hit)
 			local player = Players:GetPlayerFromCharacter(hit.Parent)
 			if player and carrying[player] then
@@ -162,6 +167,7 @@ local function hurtPlayer(character, amount)
 	end
 	character:SetAttribute("HitUntil", now + PLAYER_HIT_COOLDOWN)
 	humanoid:TakeDamage(amount)
+	Sounds.PlayAt("playerHurt", character:FindFirstChild("HumanoidRootPart") or character:GetPivot().Position)
 	return true
 end
 
@@ -196,6 +202,13 @@ function DungeonService.DamageEnemy(enemy, amount, player)
 	end
 	enemy:SetAttribute("Awake", true)
 	humanoid:TakeDamage(amount * (enemy:GetAttribute("Armor") or 1))
+	-- one "hit" sound per enemy at most every 0.1 s (a volley can hit the same enemy several times at once)
+	local root = enemy:FindFirstChild("HumanoidRootPart")
+	local now = os.clock()
+	if root and now - (enemy:GetAttribute("LastHitSound") or 0) > 0.1 then
+		enemy:SetAttribute("LastHitSound", now)
+		Sounds.PlayAt("hit", root)
+	end
 end
 
 -- ---------- enemies ----------
@@ -293,6 +306,7 @@ function DungeonService.SpawnEnemy(cframe, depth, floorIndex, kind, world, paren
 
 	humanoid.Died:Connect(function()
 		CollectionService:RemoveTag(enemy, "Enemy")
+		Sounds.PlayAt(kind == "boss" and "bossDown" or "enemyDown", root.Position)
 		if kind == "boss" then
 			local killer = Players:GetPlayerByUserId(enemy:GetAttribute("LastHitBy") or 0)
 			if onBossDefeated then
@@ -321,6 +335,16 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 	local nextSummon = os.clock() + B.summonEvery
 	local nextCharge = os.clock() + B.chargeEvery[world]
 	local helpers = {}
+
+	-- a roar when the boss first notices someone (or its dungeon's egg alarm goes off)
+	local roared = false
+	local function roar()
+		if not roared and boss.Parent and humanoid.Health > 0 then
+			roared = true
+			Sounds.PlayAt("bossRoar", root)
+		end
+	end
+	boss:GetAttributeChangedSignal("Awake"):Connect(roar)
 
 	local function restoreSpeed()
 		humanoid.WalkSpeed = boss:GetAttribute("BaseWalkSpeed") * (alarmed(boss.Parent) and Config.AggroSpeedBoost or 1)
@@ -382,6 +406,9 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 
 	while boss.Parent and humanoid.Health > 0 do
 		task.wait(0.1)
+		if alarmed(boss.Parent) then
+			roar()
+		end
 		if not boss:GetAttribute("Awake") and not alarmed(boss.Parent) then
 			nextSlam = os.clock() + B.slamEvery[world]
 			nextSummon = os.clock() + B.summonEvery
@@ -408,9 +435,11 @@ function runBossAI(boss, humanoid, root, depth, floorIndex, world, parent)
 			local floorY = root.Position.Y - humanoid.HipHeight - root.Size.Y / 2 + 0.2
 			local center = Vector3.new(root.Position.X, floorY, root.Position.Z)
 			groundRing(center, B.slamRadius, Color3.fromRGB(255, 42, 42), 0.55, B.slamWarning)
+			Sounds.PlayAt("slamWarning", center)
 			task.wait(B.slamWarning)
 			if humanoid.Health > 0 then
 				groundRing(center, B.slamRadius * 1.05, Color3.fromRGB(255, 90, 42), 0.2, 0.25)
+				Sounds.PlayAt("slam", center)
 				for _, player in ipairs(Players:GetPlayers()) do
 					local character = player.Character
 					local proot = character and character:FindFirstChild("HumanoidRootPart")
@@ -513,6 +542,7 @@ function DungeonService.SpawnEgg(position, rarity, group)
 		carrying[player] = rarity
 		eggFrom[player] = group
 		player:SetAttribute("CarryingEgg", rarity)
+		Sounds.PlayAt("eggTaken", egg.Position)
 		egg:Destroy()
 		updateAlarm(group)
 		notify(player, "The whole dungeon is awake! Run back to town!")
@@ -528,6 +558,10 @@ function DungeonService.BankEgg(player)
 	end
 	PetService.BankEgg(player, rarity)
 	clearCarrier(player)
+	local character = player.Character
+	if character then
+		Sounds.PlayAt("eggBanked", character:GetPivot().Position)
+	end
 	notify(player, "You brought home a " .. Data.rarities[rarity] .. " egg! It's in your backpack: equip it and click inside your pen to place it.")
 end
 

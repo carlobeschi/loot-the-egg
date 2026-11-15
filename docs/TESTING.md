@@ -9,7 +9,7 @@ If the Command Bar runs on the Client even with Server selected (newer Studio do
 client: `print(game.ReplicatedStorage.StudioCheat:InvokeServer("coins", 1000000))`. It only exists in Studio.
 
 Claude can also run these checks itself on Carlo's Mac (Studio in Play mode, driven through the Command Bar).
-Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio test" PR, and slice 6 passed
+Last run: 2026-11-15, slices 1 to 8 passed (slice 7's two-player check needs a published place); earlier: slices 1 to 5 passed after the fixes in the "first Studio test" PR, and slice 6 passed
 in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 
 ## Slice 1: combat, test tower, boss (PR #1)
@@ -74,3 +74,11 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
       dungeons stay asleep. Banking it calms them down.
 - [ ] With a published place and two players (Test > Clients and Servers, 2 players): one player's egg doesn't
       wake the dungeon the other player is in.
+
+## Slice 8: sound and minimap
+- [ ] Music starts a few seconds after you join: a low hum, wind and slow echoing notes. In World 2 it is lower.
+- [ ] Swinging, casting, shooting and Q each make a sound; so do hitting enemies, enemies dying, getting hurt,
+      the boss roaring when it sees you, the boss slam, taking the egg (a ghostly wail) and banking it (a fanfare).
+- [ ] Settings > "Music and sounds" (or M) mutes everything; it stays off after you rejoin.
+- [ ] The minimap (left side) shows the town, plots (yours gold), dungeons (green open, red locked) and an arrow
+      for you that turns as you turn. Taking an egg makes that dungeon flash. In World 2 it shows Dungeons 10 to 18.
