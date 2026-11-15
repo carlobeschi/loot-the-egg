@@ -23,6 +23,8 @@ local DungeonService = {}
 local DataService, PetService
 local carrying = {} -- [Player] = rarity of the egg they are carrying
 local eggFrom = {} -- [Player] = the enemies' folder (a tower's Enemies folder) whose egg they carry
+local lyingEggs = {} -- [egg Part on the ground] = the enemies' folder it came from
+DungeonService.OnPlayerDied = nil :: ((Player, Model, Instance?) -> ())? -- set by TowerService
 local notify = function(_player, _text) end -- set by Main so we can show messages
 
 -- JS enemy speeds are in "per frame" units where the player walks at about 2.5. Roblox players walk at 16.
@@ -106,9 +108,14 @@ function DungeonService.Init(dataService, petService, notifyFunction)
 		local humanoid = character:WaitForChild("Humanoid", 10)
 		if humanoid then
 			humanoid.Died:Connect(function()
+				local eggGroup = eggFrom[player]
 				if carrying[player] then
 					DungeonService.DropEgg(player)
 					notify(player, "You lost the egg! Beat the boss again for a new one.")
+				end
+				-- TowerService resets the dungeon you fell in (and the one whose egg you carried)
+				if DungeonService.OnPlayerDied then
+					DungeonService.OnPlayerDied(player, character, eggGroup)
 				end
 			end)
 		end
@@ -526,6 +533,10 @@ function DungeonService.SpawnEgg(position, rarity, group)
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = egg
 	egg.Parent = workspace
+	lyingEggs[egg] = group
+	egg.Destroying:Connect(function()
+		lyingEggs[egg] = nil
+	end)
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Take the " .. Data.rarities[rarity] .. " egg"
@@ -563,6 +574,15 @@ function DungeonService.BankEgg(player)
 		Sounds.PlayAt("eggBanked", character:GetPivot().Position)
 	end
 	notify(player, "You brought home a " .. Data.rarities[rarity] .. " egg! It's in your backpack: equip it and click inside your pen to place it.")
+end
+
+-- Removes the eggs still lying on the ground in one dungeon (used when that dungeon resets after a death).
+function DungeonService.ClearEggs(group)
+	for egg, from in pairs(lyingEggs) do
+		if from == group then
+			egg:Destroy()
+		end
+	end
 end
 
 function DungeonService.DropEgg(player)

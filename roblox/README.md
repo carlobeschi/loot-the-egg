@@ -19,6 +19,7 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/ReplicatedStorage/Config/ConfigData.lua` | A ModuleScript named `ConfigData` **inside** `Config` | The numbers (rarities, pets, income, costs, weapon names). Generated from the JS game |
 | `src/ServerScriptService/DataService.lua` | ServerScriptService > ModuleScript | Saves and loads each player's progress (DataStore) |
 | `src/ServerScriptService/PlotService.lua` | ServerScriptService > ModuleScript | Gives each player a plot, builds the pen look, spawns their pets |
+| `src/ServerScriptService/PetModels.lua` | ServerScriptService > ModuleScript | Builds each of the 16 pets out of parts (used by PlotService) |
 | `src/ServerScriptService/PetService.lua` | ServerScriptService > ModuleScript | Hatching, equip best, selling, pen upgrades, rebirth, World Gate |
 | `src/ServerScriptService/DungeonService.lua` | ServerScriptService > ModuleScript | Enemies, boss defeated, egg drop, taking the egg wakes everything, banking it in town |
 | `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow, and the Q abilities: gives your weapon, works out hits on the server |
@@ -110,7 +111,7 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 Done so far: combat and Q abilities (`CombatService`), Dungeons 1 to 9 with gates (`TowerService`), boss slam, charge, summons and enrage (`DungeonService`), eggs as backpack items (`EggService`), shops and screens (`ShopService`), World 2 with Dungeons 10 to 18 (`World2Service`). Slices 1 to 6 were Play-tested in Studio. Still to do:
 
-1. **Real models and egg visuals.** Sound, music and the minimap are done; swap the built-in sounds in `Config/Sounds.lua` for your own uploads if you like. Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
+1. **Egg visuals and enemy models.** Sound, music, the minimap, pet models and castle-style dungeons are done; swap the built-in sounds in `Config/Sounds.lua` for your own uploads if you like. Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
 2. **Private publish** for up to 10 early testers, then the content questionnaire (see `docs/HANDOVER.md`).
 
 ## Checking the scripts without Studio

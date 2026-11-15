@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local PetModels = require(script.Parent:WaitForChild("PetModels"))
 local Data = Config.Data
 
 local PlotService = {}
@@ -107,57 +108,14 @@ function PlotService.ApplyPenStyle(player, level)
 	end
 end
 
--- A simple pet built from Parts so everything works before you have real models.
--- Later: put your own models in ServerStorage.PetModels (named after the pet) and clone those instead.
-local function makePet(def, rarity)
-	local scale = PET_SCALE[rarity]
-	local color = Color3.fromHex(def.color)
-	local model = Instance.new("Model")
-	model.Name = def.name
-
-	local function part(size, shape, offset, col)
-		local p = Instance.new("Part")
-		p.Shape = shape
-		p.Size = size * scale
-		p.Color = col
-		p.Material = (rarity >= 5) and Enum.Material.Neon or Enum.Material.SmoothPlastic
-		p.CanCollide = false
-		p.Massless = true
-		p.Anchored = false
-		p:SetAttribute("Offset", offset * scale)
-		p.Parent = model
-		return p
-	end
-
-	local body = part(Vector3.new(2.6, 2, 2), Enum.PartType.Ball, Vector3.zero, color)
-	body.Name = "Body"
-	body.Anchored = true
-	local head = part(Vector3.new(1.7, 1.7, 1.7), Enum.PartType.Ball, Vector3.new(1.5, 0.9, 0), color)
-	head.Name = "Head"
-	local eyeL = part(Vector3.new(0.4, 0.4, 0.4), Enum.PartType.Ball, Vector3.new(2.2, 1.1, -0.45), Color3.new(0, 0, 0))
-	local eyeR = part(Vector3.new(0.4, 0.4, 0.4), Enum.PartType.Ball, Vector3.new(2.2, 1.1, 0.45), Color3.new(0, 0, 0))
-	local extra = { head, eyeL, eyeR }
-
-	if def.wings and def.wings > 0 then
-		local accent = Color3.fromHex(def.accent)
-		for _, side in ipairs({ -1, 1 }) do
-			local wing = part(Vector3.new(1.6, 0.2, 2.2), Enum.PartType.Block, Vector3.new(-0.2, 0.9, side * 1.8), accent)
-			table.insert(extra, wing)
-		end
-	end
-
-	model.PrimaryPart = body
-	return model, body, extra
-end
-
-local function placeAndWeld(body, extra, cframe)
-	body.CFrame = cframe
-	for _, p in ipairs(extra) do
-		p.CFrame = cframe * CFrame.new(p:GetAttribute("Offset"))
+local function placeAndWeld(root, parts, cframe)
+	root.CFrame = cframe
+	for _, p in ipairs(parts) do
+		p.CFrame = cframe * p:GetAttribute("Offset")
 		local weld = Instance.new("WeldConstraint")
-		weld.Part0 = body
+		weld.Part0 = root
 		weld.Part1 = p
-		weld.Parent = body
+		weld.Parent = p
 	end
 end
 
@@ -167,20 +125,59 @@ local function randomPointIn(area, y)
 	return Vector3.new(p.X, y, p.Z)
 end
 
-local function wander(model, body, area)
+local function move(root, cframe, seconds, style, direction)
+	TweenService:Create(root, TweenInfo.new(seconds, style or Enum.EasingStyle.Linear, direction or Enum.EasingDirection.Out), { CFrame = cframe }):Play()
+	task.wait(seconds)
+end
+
+-- The pet walks about its pen: it turns toward a spot, then trots there in little bouncy steps (bunnies and
+-- chicks hop). Flying pets glide there instead, bobbing up and down in the air.
+local function wander(model, root, area, info, scale)
 	task.spawn(function()
-		while model.Parent and body.Parent do
-			task.wait(rng:NextNumber(1, 4))
-			if not (model.Parent and body.Parent) then
+		local baseY = root.Position.Y
+		local alive = function()
+			return model.Parent ~= nil and root.Parent ~= nil
+		end
+		while alive() do
+			-- rest a moment (flyers bob in place)
+			if info.fly then
+				for _ = 1, rng:NextInteger(1, 3) do
+					move(root, root.CFrame + Vector3.new(0, 0.35 * scale, 0), 0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+					move(root, root.CFrame - Vector3.new(0, 0.35 * scale, 0), 0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+				end
+			else
+				task.wait(rng:NextNumber(1, 4))
+			end
+			if not alive() then
 				break
 			end
-			local target = randomPointIn(area, body.Position.Y)
-			local flat = target - body.Position
-			if flat.Magnitude > 0.5 then
-				local look = CFrame.lookAt(target, target + flat.Unit)
-				local tween = TweenService:Create(body, TweenInfo.new(flat.Magnitude / 4, Enum.EasingStyle.Linear), { CFrame = look })
-				tween:Play()
-				tween.Completed:Wait()
+			local here = root.Position
+			local target = randomPointIn(area, baseY)
+			local flat = target - Vector3.new(here.X, baseY, here.Z)
+			if flat.Magnitude > 1 then
+				-- turn to face the way it is going
+				move(root, CFrame.lookAt(here, here + flat.Unit), 0.35, Enum.EasingStyle.Sine)
+				if info.fly then
+					move(root, CFrame.lookAt(target, target + flat.Unit), flat.Magnitude / 6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+				else
+					local stride = (info.hop and 1.1 or 0.7) * scale
+					local lift = (info.hop and 0.6 or 0.15) * scale
+					local stepTime = info.hop and 0.32 or 0.2
+					local steps = math.max(1, math.floor(flat.Magnitude / stride))
+					local start = Vector3.new(here.X, baseY, here.Z)
+					for i = 1, steps do
+						if not alive() then
+							return
+						end
+						local a = start + flat * ((i - 0.5) / steps) + Vector3.new(0, lift, 0)
+						local b = start + flat * (i / steps)
+						move(root, CFrame.lookAt(a, a + flat.Unit), stepTime / 2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+						move(root, CFrame.lookAt(b, b + flat.Unit), stepTime / 2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+					end
+					if info.hop then
+						task.wait(0.15)
+					end
+				end
 			end
 		end
 	end)
@@ -207,11 +204,13 @@ function PlotService.RefreshPets(player, profile)
 
 	for _, pet in ipairs(profile.pets) do
 		local def = Data.pets[pet.rarity][pet.kind]
-		local model, body, extra = makePet(def, pet.rarity)
-		local start = randomPointIn(area, area.Position.Y + area.Size.Y / 2 + 1.1 * PET_SCALE[pet.rarity])
-		placeAndWeld(body, extra, CFrame.new(start))
+		local scale = PET_SCALE[pet.rarity]
+		local model, root, parts, info = PetModels.Build(def, pet.rarity, scale)
+		local height = info.ground + (info.fly and 1.6 * scale or 0) -- flyers float above the grass
+		local start = randomPointIn(area, area.Position.Y + area.Size.Y / 2 + height)
+		placeAndWeld(root, parts, CFrame.new(start) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0))
 		model.Parent = folder
-		wander(model, body, area)
+		wander(model, root, area, info, scale)
 	end
 end
 
