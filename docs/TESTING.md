@@ -10,7 +10,7 @@ client: `print(game.ReplicatedStorage.StudioCheat:InvokeServer("coins", 1000000)
 
 Claude can also run these checks itself on Carlo's Mac (Studio in Play mode, driven through the Command Bar).
 Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio test" PR, and slice 6 passed
-(except banking an egg in the World 2 town, which needs a cleared World 2 dungeon and was not tried yet).
+in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 
 ## Slice 1: combat, test tower, boss (PR #1)
 - [ ] You spawn at your pen; the sign shows your name; coins show top left.
@@ -61,7 +61,8 @@ Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio 
       row with a Travel button. Travel puts you in the World 2 town with orange, smoky light.
 - [ ] Dungeon 10 (straight south of the town) fills with enemies when you walk in. Dungeon 11 is locked and pushes
       you back out. Cheat: `Invoke("depth2", 3)` opens Dungeons 10 to 13.
-- [ ] Clear a World 2 dungeon, take the egg and bring it to the World 2 town plaza: it goes in your backpack.
+- [ ] Clear a World 2 dungeon, take the egg and bring it to the World 2 town plaza: it goes in your backpack, and
+      the next dungeon opens. Cheat for a quick clear: walk in so it fills, then `Invoke("kill", 10)`.
 - [ ] You can't travel while carrying an egg ("Bring the egg to town first!").
 - [ ] Die in World 2: you come back in the World 2 town, not at home.
 - [ ] The portal behind the town sign ("Go home", press E) takes you back to your plot with normal light.

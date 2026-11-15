@@ -20,6 +20,7 @@ print(Cheat:Invoke("coins", 50000000)) -- add 50 million coins
 -- print(Cheat:Invoke("world2"))          -- unlock World 2 without the World Gate requirements
 -- print(Cheat:Invoke("depth2", 3))       -- World 2: pretend you beat Dungeons 10 to 12
 -- print(Cheat:Invoke("travel", 2))       -- go to World 2 (1 = back home)
+-- print(Cheat:Invoke("kill", 10))        -- defeat everything in Dungeon 10 (walk in first so it fills); the boss drops its egg
 
 -- See the egg odds the game uses (works in any view, because Config has no saved data):
 -- local Config = require(game.ReplicatedStorage.Config)
