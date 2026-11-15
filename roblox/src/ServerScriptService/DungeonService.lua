@@ -49,16 +49,27 @@ function DungeonService.Init(dataService, petService, notifyFunction)
 	end
 	workspace:SetAttribute("Aggro", false)
 
-	local town = workspace:FindFirstChild("TownZone")
-	if town then
+	-- Reaching a town banks the egg. Every part tagged "TownZone" counts: the World 1 one from the place
+	-- (Workspace.TownZone, tagged here) and the World 2 one that World2Service builds.
+	local function watchTown(town)
 		town.Touched:Connect(function(hit)
 			local player = Players:GetPlayerFromCharacter(hit.Parent)
 			if player and carrying[player] then
 				DungeonService.BankEgg(player)
 			end
 		end)
+	end
+	CollectionService:GetInstanceAddedSignal("TownZone"):Connect(watchTown)
+	for _, town in ipairs(CollectionService:GetTagged("TownZone")) do
+		watchTown(town)
+	end
+	local town = workspace:FindFirstChild("TownZone")
+	if town then
+		if not CollectionService:HasTag(town, "TownZone") then
+			CollectionService:AddTag(town, "TownZone")
+		end
 	else
-		warn("[DungeonService] no part named TownZone in Workspace, so eggs can't be banked")
+		warn("[DungeonService] no part named TownZone in Workspace, so eggs can't be banked in World 1")
 	end
 
 	-- dying while carrying an egg loses it

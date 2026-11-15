@@ -11,7 +11,7 @@ local Data = Config.Data
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
-for _, name in ipairs({ "OpenWindow", "State", "BuyWeapon", "BuyUpgrade", "UpgradePen", "SellWeakest", "EquipBest", "Rebirth", "UnlockWorld2" }) do
+for _, name in ipairs({ "OpenWindow", "State", "BuyWeapon", "BuyUpgrade", "UpgradePen", "SellWeakest", "EquipBest", "Rebirth", "UnlockWorld2", "Travel" }) do
 	remotes:WaitForChild(name)
 end
 
@@ -58,10 +58,14 @@ close.TextScaled = true
 close.Parent = frame
 Instance.new("UICorner", close)
 
-local list = Instance.new("Frame")
+local list = Instance.new("ScrollingFrame") -- scrolls when the screen is too short for every row
 list.Size = UDim2.new(1, -24, 1, -64)
 list.Position = UDim2.fromOffset(12, 56)
 list.BackgroundTransparency = 1
+list.BorderSizePixel = 0
+list.CanvasSize = UDim2.new()
+list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+list.ScrollBarThickness = 6
 list.Parent = frame
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 8)
@@ -208,7 +212,12 @@ windows.WorldGate = function(s)
 	title.Text = "World Gate"
 	if s.world2 then
 		row(1, "World 2 is unlocked! Stronger weapons are at the Blacksmith.", nil)
-		row(2, "(The World 2 map comes in a later update.)", nil)
+		row(2, "Ember Wastes: Dungeons 10 to 18", "Travel", true, function()
+			remotes.Travel:FireServer(2)
+			current = nil -- close the window (the same as the X button)
+			clearRows()
+			frame.Visible = false
+		end)
 		return
 	end
 	local need = Config.World2

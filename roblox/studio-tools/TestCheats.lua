@@ -6,6 +6,7 @@
   there gives you a fresh, empty copy. Main.server.lua makes ServerStorage.Cheat (in Studio only), and calling
   it runs inside the real game. The HUD updates within a second. It never exists in the published game.
 ]]
+-- From the CLIENT view, use game.ReplicatedStorage.StudioCheat:InvokeServer(...) with the same commands instead.
 local Cheat = game:GetService("ServerStorage"):WaitForChild("Cheat")
 
 print(Cheat:Invoke("coins", 50000000)) -- add 50 million coins
@@ -15,6 +16,10 @@ print(Cheat:Invoke("coins", 50000000)) -- add 50 million coins
 -- print(Cheat:Invoke("weapon", 5))       -- weapon tier 5 for your current class (0 to 11)
 -- print(Cheat:Invoke("class", "Wizard")) -- switch class: "Knight", "Wizard" or "Bowman"
 -- print(Cheat:Invoke("boss", 3))         -- spawn an awake depth-3 boss in front of you (it drops an egg)
+-- print(Cheat:Invoke("depth", 4))        -- pretend you beat Dungeons 1 to 4 (opens up to Dungeon 5)
+-- print(Cheat:Invoke("world2"))          -- unlock World 2 without the World Gate requirements
+-- print(Cheat:Invoke("depth2", 3))       -- World 2: pretend you beat Dungeons 10 to 12
+-- print(Cheat:Invoke("travel", 2))       -- go to World 2 (1 = back home)
 
 -- See the egg odds the game uses (works in any view, because Config has no saved data):
 -- local Config = require(game.ReplicatedStorage.Config)

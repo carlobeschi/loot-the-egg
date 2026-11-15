@@ -16,6 +16,7 @@ local CombatService = require(ServerScriptService:WaitForChild("CombatService"))
 local TowerService = require(ServerScriptService:WaitForChild("TowerService"))
 local EggService = require(ServerScriptService:WaitForChild("EggService"))
 local ShopService = require(ServerScriptService:WaitForChild("ShopService"))
+local World2Service = require(ServerScriptService:WaitForChild("World2Service"))
 
 -- ---------- remotes (made first, so the client never waits on a service that is still starting) ----------
 local remotes = Instance.new("Folder")
@@ -42,6 +43,7 @@ local R = {
 	Attack = makeRemote("Attack"),
 	Ability = makeRemote("Ability"), -- client -> server: "I used my ability, aiming this way" -- client -> server: "I attacked, aiming this way"
 	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman"
+	Travel = makeRemote("Travel"), -- client -> server: 1 (home) or 2 (World 2), from the World Gate window
 	State = makeRemote("State"), -- server -> client: your numbers for the HUD
 	Notice = makeRemote("Notice"), -- server -> client: a message to show
 }
@@ -61,6 +63,7 @@ CombatService.Init(DataService, DungeonService)
 TowerService.Init(DungeonService, DataService, notice)
 EggService.Init(DataService, PlotService, PetService, notice)
 ShopService.Init(DataService, PlotService, CombatService, R.OpenWindow, notice)
+World2Service.Init(DataService, DungeonService, PlotService, notice)
 
 -- Basic anti-spam: each player can use each action at most once per `gap` seconds.
 local lastUse = {}
@@ -154,6 +157,11 @@ R.ChooseClass.OnServerEvent:Connect(function(player, className)
 		notice(player, "You are now a " .. className .. "!")
 	end
 end)
+R.Travel.OnServerEvent:Connect(function(player, world)
+	if allowed(player, "Travel", 2) and (world == 1 or world == 2) then
+		World2Service.Travel(player, world)
+	end
+end)
 R.SetShowPets.OnServerEvent:Connect(function(player, value)
 	local profile = DataService.Get(player)
 	if profile and type(value) == "boolean" then
@@ -189,7 +197,11 @@ local function onJoin(player)
 	local function onCharacter(character)
 		character:WaitForChild("Humanoid", 10)
 		task.wait(0.5)
-		PlotService.TeleportToPlot(player)
+		if player:GetAttribute("World") == 2 then
+			character:PivotTo(World2Service.SpawnCFrame()) -- died in World 2: back to the World 2 town
+		else
+			PlotService.TeleportToPlot(player)
+		end
 		CombatService.Equip(player)
 		EggService.SyncTools(player)
 	end
@@ -211,9 +223,7 @@ end)
 -- ---------- Studio-only test cheats (see studio-tools/TestCheats.lua) ----------
 -- The Command Bar can't reach this script's data directly, so it calls this BindableFunction instead.
 if RunService:IsStudio() then
-	local cheat = Instance.new("BindableFunction")
-	cheat.Name = "Cheat"
-	cheat.OnInvoke = function(command, value)
+	local function runCheat(command, value)
 		local player = Players:GetPlayers()[1]
 		local profile = player and DataService.Get(player)
 		if not profile then
@@ -243,6 +253,12 @@ if RunService:IsStudio() then
 			end
 		elseif command == "depth" then
 			profile.bestDepth = math.clamp(value or 9, 0, 9) -- pretend you beat dungeons 1..value
+		elseif command == "world2" then
+			profile.world2Unlocked = true -- skip the World Gate requirements
+		elseif command == "depth2" then
+			profile.bestDepth2 = math.clamp(value or 9, 0, 9) -- World 2: 1 = Dungeon 10 beaten
+		elseif command == "travel" then
+			World2Service.Travel(player, value or 2)
 		elseif command == "profile" then
 			return profile
 		else
@@ -250,7 +266,19 @@ if RunService:IsStudio() then
 		end
 		return "ok"
 	end
+	local cheat = Instance.new("BindableFunction")
+	cheat.Name = "Cheat"
+	cheat.OnInvoke = runCheat
 	cheat.Parent = ServerStorage
+	-- The same cheats from the CLIENT Command Bar: game.ReplicatedStorage.StudioCheat:InvokeServer("coins", 1000)
+	-- (handy when the Server view is slow to switch). Made in Studio only, like the one above.
+	local studioCheat = Instance.new("RemoteFunction")
+	studioCheat.Name = "StudioCheat"
+	studioCheat.OnServerInvoke = function(_player, command, value)
+		local result = runCheat(command, value)
+		return type(result) == "table" and "profile is only readable from the Server view" or result
+	end
+	studioCheat.Parent = ReplicatedStorage
 end
 
 -- ---------- income loop and HUD updates ----------

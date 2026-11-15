@@ -11,6 +11,7 @@ Config.Data = Data
 Config.MaxRebirths = #Data.rebirth.cost
 Config.MaxPenLevel = 9
 Config.World2 = { rebirths = 5, petRarity = 6, penLevel = 7, coins = 10000000 } -- petRarity 6 = Mythic
+Config.World2Origin = Vector3.new(2000, 0, 0) -- World 2 is a second zone far east of World 1 (see World2Service)
 Config.AggroSpeedBoost = 1.25 -- enemies move 25% faster once someone grabs an egg
 
 -- ---------- pets, pen, rebirth ----------
