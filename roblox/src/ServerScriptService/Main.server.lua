@@ -290,6 +290,12 @@ if RunService:IsStudio() then
 				return "no Tower" .. tostring(value)
 			end
 			TowerService.Reset(tower)
+		elseif command == "die" then
+			-- your character dies on the server (to test what happens when you die)
+			local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid.Health = 0
+			end
 		elseif command == "travel" then
 			World2Service.Travel(player, value or 2)
 		elseif command == "profile" then

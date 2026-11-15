@@ -97,5 +97,6 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 - [ ] Inside: real torches with flames on the walls, a pillar in each corner, a glowing circle on each floor,
       bones, rubble, crates and hanging chains. The boss floor has a red circle and two fire bowls.
 - [ ] Die inside a dungeon (or while carrying its egg): "Dungeon N has reset". Walking in again fills it from the
-      start. If another player is still alive inside, it does not reset. Cheat: `InvokeServer("reset", 1)`.
+      start. If another player is still alive inside, it does not reset. Cheats: `InvokeServer("die")` kills you,
+      `InvokeServer("reset", 1)` empties Dungeon 1.
 - [ ] World 2 bosses have a bit less health (0.72 instead of 0.78) and hit for 18 instead of 19.

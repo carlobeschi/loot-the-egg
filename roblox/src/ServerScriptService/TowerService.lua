@@ -493,8 +493,9 @@ function TowerService.Watch(model, base, depth, world, floors)
 	local lastWarned = {}
 	entry.Touched:Connect(function(hit)
 		local player = Players:GetPlayerFromCharacter(hit.Parent)
-		if not player then
-			return
+		local humanoid = hit.Parent:FindFirstChildOfClass("Humanoid")
+		if not player or not humanoid or humanoid.Health <= 0 then
+			return -- a fallen player's body lying on the pad must not fill the dungeon again
 		end
 		if not TowerService.IsUnlocked(player, depth, world) then
 			-- put them back outside the door
