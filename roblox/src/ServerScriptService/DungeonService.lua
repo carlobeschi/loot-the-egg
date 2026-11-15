@@ -400,7 +400,7 @@ function DungeonService.BankEgg(player)
 	PetService.BankEgg(player, rarity)
 	carrying[player] = nil
 	player:SetAttribute("CarryingEgg", nil)
-	notify(player, "You brought home a " .. Data.rarities[rarity] .. " egg! Hatch it at your pen.")
+	notify(player, "You brought home a " .. Data.rarities[rarity] .. " egg! It's in your backpack: equip it and click inside your pen to place it.")
 	if next(carrying) == nil then
 		setAggro(false) -- calm everything down when nobody is carrying an egg
 	end

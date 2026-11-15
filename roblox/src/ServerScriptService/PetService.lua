@@ -70,14 +70,25 @@ function PetService.Hatch(player)
 		return nil, "You have no eggs. Eggs only drop from dungeon bosses."
 	end
 	profile.eggs[rarity] -= 1
+	PetService.EggsChanged(player)
+	return PetService.AddPet(player, rarity)
+end
+
+-- Makes a new pet of this rarity (one of its two kinds at random). Used when a placed egg hatches.
+-- Returns the pet, and true if it went to storage because the pen was full.
+function PetService.AddPet(player, rarity)
+	local profile = DataService.Get(player)
+	if not profile then
+		return nil
+	end
 	local pet = { rarity = rarity, kind = math.random(1, 2) }
 	if #profile.pets < Config.penCapacity(profile.penLevel) then
 		table.insert(profile.pets, pet)
 		PlotService.RefreshPets(player, profile)
-	else
-		table.insert(profile.stash, pet) -- pen is full, so it goes to storage
+		return pet, false
 	end
-	return pet
+	table.insert(profile.stash, pet) -- pen is full, so it goes to storage
+	return pet, true
 end
 
 function PetService.EquipBest(player)
@@ -195,10 +206,22 @@ function PetService.UnlockWorld2(player)
 end
 
 -- ---------- eggs coming home from a dungeon ----------
+-- profile.eggs is the egg inventory. EggService shows it as egg items in the backpack, so tell it about changes.
+local eggListeners = {}
+function PetService.OnEggsChanged(callback)
+	table.insert(eggListeners, callback)
+end
+function PetService.EggsChanged(player)
+	for _, callback in ipairs(eggListeners) do
+		task.spawn(callback, player)
+	end
+end
+
 function PetService.BankEgg(player, rarity)
 	local profile = DataService.Get(player)
 	if profile then
 		profile.eggs[rarity] += 1
+		PetService.EggsChanged(player)
 	end
 end
 

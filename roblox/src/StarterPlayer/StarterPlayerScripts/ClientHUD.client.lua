@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
-for _, name in ipairs({ "Hatch", "EquipBest", "Rebirth", "SetShowPets", "ChooseClass", "State", "Notice" }) do
+for _, name in ipairs({ "EquipBest", "Rebirth", "SetShowPets", "ChooseClass", "State", "Notice" }) do
 	remotes:WaitForChild(name)
 end
 
@@ -54,7 +54,6 @@ local info2 = label(gui, UDim2.fromOffset(330, 30), UDim2.fromOffset(14, 60), ""
 local notice = label(gui, UDim2.fromOffset(520, 36), UDim2.new(0.5, -260, 0, 14), "")
 notice.Visible = false
 
-button("Hatch (nest)", -1, Color3.fromRGB(111, 209, 111), function() remotes.Hatch:FireServer() end)
 button("Equip Best", 0, Color3.fromRGB(255, 211, 74), function() remotes.EquipBest:FireServer() end)
 local rebirthButton = button("Rebirth", 1, Color3.fromRGB(255, 154, 208), function() remotes.Rebirth:FireServer() end)
 
@@ -154,7 +153,7 @@ remotes.State.OnClientEvent:Connect(function(s)
 	for _, n in ipairs(s.eggs or {}) do
 		eggCount += n
 	end
-	info2.Text = s.class .. " - " .. s.weapon .. "   Eggs " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
+	info2.Text = s.class .. " - " .. s.weapon .. "   Eggs in backpack " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
 	if firstState then
 		showPets = s.showPets
 		firstState = false

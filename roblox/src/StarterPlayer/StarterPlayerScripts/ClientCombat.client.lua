@@ -26,7 +26,7 @@ local function aimDirection(character)
 end
 
 local function hookTool(tool)
-	if not tool:IsA("Tool") or tool:GetAttribute("Hooked") then
+	if not tool:IsA("Tool") or tool:GetAttribute("Hooked") or not tool:GetAttribute("WeaponClass") then
 		return
 	end
 	tool:SetAttribute("Hooked", true)

@@ -9,7 +9,7 @@
 local Cheat = game:GetService("ServerStorage"):WaitForChild("Cheat")
 
 print(Cheat:Invoke("coins", 50000000)) -- add 50 million coins
--- print(Cheat:Invoke("eggs", 2))         -- two eggs of every rarity (press Hatch to hatch them)
+-- print(Cheat:Invoke("eggs", 2))         -- two eggs of every rarity, in your backpack (place them in your pen)
 -- print(Cheat:Invoke("pen", 7))          -- pen level 7 (Amethyst fence)
 -- print(Cheat:Invoke("rebirths", 5))     -- set rebirths to 5
 -- print(Cheat:Invoke("weapon", 5))       -- weapon tier 5 for your current class (0 to 11)

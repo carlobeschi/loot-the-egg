@@ -29,6 +29,7 @@ local function defaults()
 		eggs = { 0, 0, 0, 0, 0, 0, 0, 0 }, -- eggs you own, by rarity 1..8
 		pets = {}, -- equipped pets in your pen: { rarity = 1..8, kind = 1 or 2 }
 		stash = {}, -- pets in storage
+		placedEggs = {}, -- eggs sitting in your pen: { rarity = 1..8, x = .., z = .. (spot in the pen), hatchAt = os.time() }
 		rebirths = 0,
 		penLevel = 0,
 		class = "Knight",

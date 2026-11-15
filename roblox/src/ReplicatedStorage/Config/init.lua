@@ -102,6 +102,10 @@ function Config.abilityCooldownSeconds(level)
 	return math.max(3, 7 - 0.5 * level)
 end
 
+-- ---------- eggs placed in the pen ----------
+Config.EggHatchSeconds = { 3, 5, 8, 12, 18, 25, 35, 45 } -- by rarity: rarer eggs take longer to hatch
+Config.MaxPlacedEggs = 4 -- how many eggs can sit in your pen at once
+
 -- ---------- egg odds ----------
 local BASE_WEIGHTS = { 100, 40, 15, 6, 2, 0.6, 0.2, 0.05 }
 

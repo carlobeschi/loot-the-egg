@@ -14,6 +14,7 @@ local PetService = require(ServerScriptService:WaitForChild("PetService"))
 local DungeonService = require(ServerScriptService:WaitForChild("DungeonService"))
 local CombatService = require(ServerScriptService:WaitForChild("CombatService"))
 local TowerService = require(ServerScriptService:WaitForChild("TowerService"))
+local EggService = require(ServerScriptService:WaitForChild("EggService"))
 
 -- ---------- remotes (made first, so the client never waits on a service that is still starting) ----------
 local remotes = Instance.new("Folder")
@@ -33,6 +34,7 @@ local R = {
 	UnlockWorld2 = makeRemote("UnlockWorld2"),
 	Collect = makeRemote("Collect"),
 	SetShowPets = makeRemote("SetShowPets"),
+	PlaceEgg = makeRemote("PlaceEgg"), -- client -> server: (rarity, spot clicked in the pen)
 	Attack = makeRemote("Attack"), -- client -> server: "I attacked, aiming this way"
 	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman"
 	State = makeRemote("State"), -- server -> client: your numbers for the HUD
@@ -52,6 +54,7 @@ PetService.Init(DataService, PlotService)
 DungeonService.Init(DataService, PetService, notice)
 CombatService.Init(DataService, DungeonService)
 TowerService.Init(DungeonService)
+EggService.Init(DataService, PlotService, PetService, notice)
 
 -- Basic anti-spam: each player can use each action at most once per `gap` seconds.
 local lastUse = {}
@@ -117,6 +120,11 @@ R.Collect.OnServerEvent:Connect(function(player)
 		if n > 0 then notice(player, "Collected " .. n .. " coins!") end
 	end
 end)
+R.PlaceEgg.OnServerEvent:Connect(function(player, rarity, position)
+	if allowed(player, "PlaceEgg", 0.4) then
+		EggService.Place(player, rarity, position)
+	end
+end)
 R.Attack.OnServerEvent:Connect(function(player, aim)
 	CombatService.Attack(player, aim) -- CombatService checks the cooldown itself
 end)
@@ -142,6 +150,7 @@ local function onJoin(player)
 	if plot then
 		PlotService.ApplyPenStyle(player, profile.penLevel)
 		PlotService.RefreshPets(player, profile)
+		EggService.SpawnAllPlaced(player)
 		local pad = plot:FindFirstChild("CollectPad")
 		if pad then
 			pad.Touched:Connect(function(hit)
@@ -161,6 +170,7 @@ local function onJoin(player)
 		task.wait(0.5)
 		PlotService.TeleportToPlot(player)
 		CombatService.Equip(player)
+		EggService.SyncTools(player)
 	end
 	player.CharacterAdded:Connect(onCharacter)
 	if player.Character then
@@ -194,6 +204,7 @@ if RunService:IsStudio() then
 			for rarity = 1, 8 do
 				profile.eggs[rarity] += value or 2
 			end
+			PetService.EggsChanged(player)
 		elseif command == "pen" then
 			profile.penLevel = math.clamp(value or 7, 0, Config.MaxPenLevel)
 			PlotService.ApplyPenStyle(player, profile.penLevel)

@@ -22,9 +22,11 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/ServerScriptService/PetService.lua` | ServerScriptService > ModuleScript | Hatching, equip best, selling, pen upgrades, rebirth, World Gate |
 | `src/ServerScriptService/DungeonService.lua` | ServerScriptService > ModuleScript | Enemies, boss defeated, egg drop, taking the egg wakes everything, banking it in town |
 | `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow: gives your weapon, works out hits on the server |
+| `src/ServerScriptService/EggService.lua` | ServerScriptService > ModuleScript | Eggs as backpack items; placing them in your pen; countdown and hatching |
 | `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds the test tower (Dungeon 1) from Parts, fills it with enemies and a boss when you walk in |
 | `src/ServerScriptService/Main.server.lua` | ServerScriptService > **Script** named `Main` | Starts everything, makes the RemoteEvents, runs the coin income loop |
-| `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Hatch, Equip Best, Rebirth, class picker, Settings with "Show my pets" |
+| `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Equip Best, Rebirth, class picker, Settings with "Show my pets" |
+| `src/StarterPlayer/StarterPlayerScripts/ClientEggs.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows where an egg will go and places it when you click in your pen |
 | `src/StarterPlayer/StarterPlayerScripts/ClientCombat.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Sends your aim to the server when you click with your weapon |
 | `studio-tools/SetupTestPlace.lua`, `TestCheats.lua` | Pasted into Studio's Command Bar, never synced | Builds a test map; testing cheats |
 | `tools/export_config.js` | Stays on your computer | Re-creates `ConfigData.lua` from the JavaScript game |
@@ -112,4 +114,4 @@ Done so far: combat (sword, staff, bow in `CombatService`), one generated test t
 2. Add the scripts from the table above, then press **Test > Play** and look at the Output window (View > Output) for red errors.
 3. Use **Test > Server & Clients** with 2 clients to check that each player gets their own plot.
 4. While playing, use the Client/Server toggle to switch to Server view and paste a line from `TestCheats.lua` to give yourself coins, eggs, a better weapon or a boss.
-5. Walk south from the spawn to the tower marked "Dungeon 1". Stepping through the door fills it with enemies. Click to attack. Beat the boss on the top floor, take the egg (everything wakes up) and run back to the middle of the map to bank it.
+5. Walk south from the spawn to the tower marked "Dungeon 1". Stepping through the door fills it with enemies. Click to attack. Beat the boss on the top floor, take the egg (everything wakes up) and run back to the middle of the map to bank it. The egg appears in your backpack (bottom of the screen): equip it, click inside your pen to place it, wait for "Ready!" and press E next to it to hatch it.

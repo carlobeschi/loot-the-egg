@@ -62,9 +62,11 @@ function PlotService.Release(player)
 	if not plot then
 		return
 	end
-	local pets = plot:FindFirstChild("Pets")
-	if pets then
-		pets:ClearAllChildren()
+	for _, name in ipairs({ "Pets", "PlacedEggs" }) do
+		local folder = plot:FindFirstChild(name)
+		if folder then
+			folder:ClearAllChildren()
+		end
 	end
 	plot:SetAttribute("OwnerUserId", nil)
 	setSign(plot, "Open Plot")
