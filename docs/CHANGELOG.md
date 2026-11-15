@@ -10,6 +10,7 @@ Versions are the published artifact versions of `game/index.html`. Earlier histo
 - Roblox: shops and screens. Town huts for the Blacksmith (weapon tiers), Trainer (health, speed, ability upgrades) and World Gate; the pen sign opens upgrade, sell and equip-best; the Rebirth button shows the requirements first.
 - Roblox: `roblox/tools/luau_check.sh` type-checks the scripts with luau-lsp; `docs/TESTING.md` lists what to try per slice.
 - Roblox: eggs are backpack items (one per rarity, with a count). Equip one and click in your pen to place it; it counts down, then press E to hatch it. Placed eggs are saved. The old Hatch button is gone. Asked for by Lorenzo after the first Play test.
+- Roblox: fixes from the first Play test that Claude ran on Studio itself. Enemies no longer follow you across the map (they stay near where they spawned, unless you carry an egg); tower doors face the town; the boss egg's "Take" prompt can't be hidden by a nearby sign; shop windows fit small screens and sit in front of the HUD; class buttons no longer overlap.
 - Roblox: fixes from a code review (remotes made before anything can wait, no endless wait without a Plots folder, saving off cleanly in an unpublished place, test cheats that actually reach the game's data, World 1 boss numbers matching the JS nerf).
 
 ## v55

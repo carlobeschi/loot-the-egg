@@ -6,6 +6,9 @@ View > Output open. Paste anything red or orange back into the project thread.
 Cheats (Studio only): switch to **Server** view, open View > Command Bar, and run for example
 `print(game.ServerStorage.Cheat:Invoke("coins", 1000000))`. All commands are in `roblox/studio-tools/TestCheats.lua`.
 
+Claude can also run these checks itself on Carlo's Mac (Studio in Play mode, driven through the Command Bar).
+Last run: 2026-11-15, slices 1 to 5 passed after the fixes in the "first Studio test" PR.
+
 ## Slice 1: combat, test tower, boss (PR #1)
 - [ ] You spawn at your pen; the sign shows your name; coins show top left.
 - [ ] Knight / Wizard / Bowman buttons (bottom left) switch weapon, health and speed.
@@ -39,6 +42,8 @@ Cheats (Studio only): switch to **Server** view, open View > Command Bar, and ru
       "Dungeon N is locked". Cheat: `Invoke("depth", 4)` opens Dungeons 1 to 5.
 - [ ] Beating Dungeon 1's boss says "Dungeon 2 is open now!" and its gate turns green.
 - [ ] Deeper dungeons have more floors (up to 4) and tougher enemies.
+- [ ] Tower doors face the town. Walk out of a dungeon and away: the enemies stop following you after
+      about 45 studs and walk back (unless you carry an egg, then they chase you all the way).
 - [ ] The boss sometimes shows a red strip on the floor and then dashes along it; getting hit knocks you back.
 
 ## Slice 5: class abilities

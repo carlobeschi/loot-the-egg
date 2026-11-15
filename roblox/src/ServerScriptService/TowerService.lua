@@ -44,6 +44,7 @@ local function rampSide(floorIndex)
 end
 
 -- Builds one tower. origin = the middle of the tower at ground level. Returns the tower Model.
+-- The tower is turned so its door faces +Z (north, toward the town). Everything inside is placed through `base`.
 function TowerService.Build(origin, depth, world, parent)
 	local floors = Config.dungeonFloors(depth, world)
 	local H = Config.FloorHeight
@@ -54,7 +55,7 @@ function TowerService.Build(origin, depth, world, parent)
 	model:SetAttribute("World", world)
 	model:SetAttribute("Floors", floors)
 
-	local base = CFrame.new(origin)
+	local base = CFrame.new(origin) * CFrame.Angles(0, math.pi, 0) -- door faces the town
 	local rampX = half - WALL - RAMP_W / 2 -- distance of a ramp's middle from the tower's middle
 
 	for k = 0, floors - 1 do
@@ -140,7 +141,7 @@ function TowerService.Build(origin, depth, world, parent)
 	enemies.Parent = model
 	model.Parent = parent or workspace
 
-	TowerService.Watch(model, origin, depth, world, floors)
+	TowerService.Watch(model, base, depth, world, floors)
 	return model
 end
 
@@ -156,7 +157,7 @@ local function pickKind(depth, floorIndex)
 end
 
 -- a random spot on floor k that is not on a ramp, a hole or right by the door
-local function randomSpot(origin, k)
+local function randomSpot(base, k)
 	local half = SIZE / 2 - WALL - 2
 	local rampX = SIZE / 2 - WALL - RAMP_W / 2
 	for _ = 1, 40 do
@@ -166,23 +167,24 @@ local function randomSpot(origin, k)
 			or math.abs(x - rampSide(k) * rampX) < RAMP_W / 2 + 1.5
 		local byDoor = (k == 0 and z < -half + 8)
 		if not onRamp and not byDoor then
-			return origin + Vector3.new(x, 1 + k * Config.FloorHeight + 5, z)
+			return base * Vector3.new(x, 1 + k * Config.FloorHeight + 5, z)
 		end
 	end
-	return origin + Vector3.new(0, 1 + k * Config.FloorHeight + 5, 0)
+	return base * Vector3.new(0, 1 + k * Config.FloorHeight + 5, 0)
 end
 
-function TowerService.Fill(model, origin, depth, world, floors)
+-- base = the tower's CFrame from Build (its middle at ground level, door on its -Z side)
+function TowerService.Fill(model, base, depth, world, floors)
 	local folder = model:FindFirstChild("Enemies")
 	folder:ClearAllChildren()
 	local perFloor = (world == 2) and 7 or math.min(10, 4 + math.ceil(depth / 2))
 	for k = 0, floors - 1 do
 		for _ = 1, perFloor do
-			DungeonService.SpawnEnemy(CFrame.new(randomSpot(origin, k)), depth, k, pickKind(depth, k), world, folder)
+			DungeonService.SpawnEnemy(CFrame.new(randomSpot(base, k)), depth, k, pickKind(depth, k), world, folder)
 		end
 		if k == floors - 1 then
-			local spot = origin + Vector3.new(0, 1 + k * Config.FloorHeight + 8, 6)
-			DungeonService.SpawnEnemy(CFrame.new(spot) * CFrame.Angles(0, math.pi, 0), depth, k, "boss", world, folder, function(killer, position)
+			-- the boss stands at the back of the top floor, facing the way up
+			DungeonService.SpawnEnemy(base * CFrame.new(0, 1 + k * Config.FloorHeight + 8, 6), depth, k, "boss", world, folder, function(killer, position)
 				model:SetAttribute("Cleared", true)
 				if killer then
 					DungeonService.OnBossDefeated(killer, depth, world, position)
@@ -212,7 +214,7 @@ function TowerService.IsUnlocked(player, depth, world)
 	return profile.bestDepth >= depth - 1
 end
 
-function TowerService.Watch(model, origin, depth, world, floors)
+function TowerService.Watch(model, base, depth, world, floors)
 	model:SetAttribute("Active", false)
 	local entry = model:FindFirstChild("Entry")
 	local lastWarned = {}
@@ -225,7 +227,7 @@ function TowerService.Watch(model, origin, depth, world, floors)
 			-- put them back outside the door
 			local root = hit.Parent:FindFirstChild("HumanoidRootPart")
 			if root then
-				root.CFrame = CFrame.new(origin + Vector3.new(0, 4, -SIZE / 2 - 6)) * CFrame.Angles(0, math.pi, 0)
+				root.CFrame = base * CFrame.new(0, 4, -SIZE / 2 - 6) -- outside the door, facing away
 			end
 			if os.clock() - (lastWarned[player] or 0) > 2 then
 				lastWarned[player] = os.clock()
@@ -235,7 +237,7 @@ function TowerService.Watch(model, origin, depth, world, floors)
 		end
 		if not model:GetAttribute("Active") then
 			model:SetAttribute("Active", true)
-			TowerService.Fill(model, origin, depth, world, floors)
+			TowerService.Fill(model, base, depth, world, floors)
 		end
 	end)
 end

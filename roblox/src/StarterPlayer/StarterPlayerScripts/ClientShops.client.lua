@@ -23,11 +23,13 @@ local sellArmed = false -- selling needs two clicks
 local gui = Instance.new("ScreenGui")
 gui.Name = "LootTheEggShops"
 gui.ResetOnSpawn = false
+gui.DisplayOrder = 10 -- in front of the HUD
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.fromOffset(460, 380)
-frame.Position = UDim2.new(0.5, -230, 0.5, -190)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Size = UDim2.fromScale(0.94, 0.9) -- fills a small phone screen; the size limit below stops it at 460x380
+frame.Position = UDim2.fromScale(0.5, 0.5)
 frame.BackgroundColor3 = Color3.fromRGB(30, 40, 60)
 frame.Visible = false
 frame.Parent = gui

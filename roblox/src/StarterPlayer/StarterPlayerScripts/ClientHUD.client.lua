@@ -88,7 +88,7 @@ local classColors = { Knight = Color3.fromRGB(217, 178, 90), Wizard = Color3.fro
 for i, className in ipairs({ "Knight", "Wizard", "Bowman" }) do
 	local b = Instance.new("TextButton")
 	b.Size = UDim2.fromOffset(104, 36)
-	b.Position = UDim2.new(0, 14 + (i - 1) * 112, 1, -50)
+	b.Position = UDim2.fromOffset(14 + (i - 1) * 112, 100) -- under the coins, clear of the backpack bar
 	b.BackgroundColor3 = classColors[className]
 	b.TextColor3 = Color3.new(0, 0, 0)
 	b.Font = Enum.Font.FredokaOne

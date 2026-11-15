@@ -191,5 +191,6 @@ Config.Boss = {
 	enrageDamage = 1.15,
 }
 Config.WakeDistance = 170 / 9 -- sleeping enemies wake when a player comes this close on the same floor
+Config.LeashDistance = 45 -- awake enemies only chase players this close to where they spawned (studs, across)
 
 return Config

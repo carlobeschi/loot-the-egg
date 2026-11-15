@@ -94,13 +94,14 @@ function DungeonService.Init(dataService, petService, notifyFunction)
 end
 
 -- ---------- helpers ----------
-local function nearestPlayerRoot(position, maxDistance, sameFloorOnly)
+-- accept (optional) = function(player, root) -> true for players this enemy may go after
+local function nearestPlayerRoot(position, maxDistance, sameFloorOnly, accept)
 	local best, bestDistance = nil, maxDistance
 	for _, player in ipairs(Players:GetPlayers()) do
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		if root and humanoid and humanoid.Health > 0 then
+		if root and humanoid and humanoid.Health > 0 and (not accept or accept(player, root)) then
 			local offset = root.Position - position
 			local onFloor = math.abs(offset.Y) < Config.FloorHeight * 0.4
 			if onFloor or not sameFloorOnly then
@@ -204,21 +205,38 @@ function DungeonService.SpawnEnemy(cframe, depth, floorIndex, kind, world, paren
 	end)
 	CollectionService:AddTag(enemy, "Enemy")
 
-	-- chase loop: sleeps until a player gets close on the same floor (or an egg is taken and everything wakes up)
+	-- chase loop: sleeps until a player gets close on the same floor (or an egg is taken and everything wakes up).
+	-- Enemies stay near where they spawned (Config.LeashDistance) and walk back when nobody is in reach,
+	-- so they don't follow you across the map. The one exception: whoever carries an egg is chased anywhere.
+	local home = cframe.Position
+	local function nearHome(_player, playerRoot)
+		local offset = playerRoot.Position - home
+		return Vector3.new(offset.X, 0, offset.Z).Magnitude <= Config.LeashDistance
+	end
+	local function carryingEgg(player)
+		return DungeonService.IsCarrying(player)
+	end
 	task.spawn(function()
 		while enemy.Parent and humanoid.Health > 0 do
 			local woke = enemy:GetAttribute("Awake") or workspace:GetAttribute("Aggro")
 			local target
 			if woke then
-				target = nearestPlayerRoot(root.Position, math.huge, false)
+				if workspace:GetAttribute("Aggro") then
+					target = nearestPlayerRoot(root.Position, math.huge, false, carryingEgg)
+				end
+				target = target or nearestPlayerRoot(root.Position, math.huge, false, nearHome)
 			else
 				target = nearestPlayerRoot(root.Position, Config.WakeDistance, true)
 				if target then
 					enemy:SetAttribute("Awake", true)
 				end
 			end
-			if target and not enemy:GetAttribute("Busy") then
-				humanoid:MoveTo(target.Position) -- swap for PathfindingService when towers get walls and stairs
+			if not enemy:GetAttribute("Busy") then
+				if target then
+					humanoid:MoveTo(target.Position) -- swap for PathfindingService if they get stuck on ramps
+				elseif (root.Position - home).Magnitude > 4 then
+					humanoid:MoveTo(home) -- nobody in reach: go back
+				end
 			end
 			task.wait(0.3)
 		end
@@ -449,6 +467,7 @@ function DungeonService.SpawnEgg(position, rarity)
 	prompt.HoldDuration = 0.5
 	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight = false
+	prompt.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow -- never hidden by a nearby sign or shop prompt
 	prompt.Parent = egg
 	prompt.Triggered:Connect(function(player)
 		if carrying[player] or not egg.Parent then
