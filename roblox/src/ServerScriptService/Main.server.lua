@@ -15,6 +15,7 @@ local DungeonService = require(ServerScriptService:WaitForChild("DungeonService"
 local CombatService = require(ServerScriptService:WaitForChild("CombatService"))
 local TowerService = require(ServerScriptService:WaitForChild("TowerService"))
 local EggService = require(ServerScriptService:WaitForChild("EggService"))
+local ShopService = require(ServerScriptService:WaitForChild("ShopService"))
 
 -- ---------- remotes (made first, so the client never waits on a service that is still starting) ----------
 local remotes = Instance.new("Folder")
@@ -34,7 +35,10 @@ local R = {
 	UnlockWorld2 = makeRemote("UnlockWorld2"),
 	Collect = makeRemote("Collect"),
 	SetShowPets = makeRemote("SetShowPets"),
-	PlaceEgg = makeRemote("PlaceEgg"), -- client -> server: (rarity, spot clicked in the pen)
+	PlaceEgg = makeRemote("PlaceEgg"),
+	BuyWeapon = makeRemote("BuyWeapon"), -- client -> server: class name
+	BuyUpgrade = makeRemote("BuyUpgrade"), -- client -> server: "health" | "speed" | "ability"
+	OpenWindow = makeRemote("OpenWindow"), -- server -> client: "Weapons" | "Upgrades" | "WorldGate" | "Pen" -- client -> server: (rarity, spot clicked in the pen)
 	Attack = makeRemote("Attack"), -- client -> server: "I attacked, aiming this way"
 	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman"
 	State = makeRemote("State"), -- server -> client: your numbers for the HUD
@@ -55,6 +59,7 @@ DungeonService.Init(DataService, PetService, notice)
 CombatService.Init(DataService, DungeonService)
 TowerService.Init(DungeonService)
 EggService.Init(DataService, PlotService, PetService, notice)
+ShopService.Init(DataService, PlotService, CombatService, R.OpenWindow, notice)
 
 -- Basic anti-spam: each player can use each action at most once per `gap` seconds.
 local lastUse = {}
@@ -99,7 +104,9 @@ R.SellWeakest.OnServerEvent:Connect(function(player)
 end)
 R.UpgradePen.OnServerEvent:Connect(function(player)
 	if allowed(player, "UpgradePen", 1) then
-		result(player, PetService.UpgradePen(player))
+		local ok, message = PetService.UpgradePen(player)
+		local profile = DataService.Get(player)
+		result(player, ok, ok and profile and ("Your pen is now " .. Config.Data.pen.names[profile.penLevel + 1] .. "!") or message)
 	end
 end)
 R.Rebirth.OnServerEvent:Connect(function(player)
@@ -118,6 +125,16 @@ R.Collect.OnServerEvent:Connect(function(player)
 	if allowed(player, "Collect", 0.5) then
 		local n = PetService.Collect(player)
 		if n > 0 then notice(player, "Collected " .. n .. " coins!") end
+	end
+end)
+R.BuyWeapon.OnServerEvent:Connect(function(player, className)
+	if allowed(player, "Buy", 0.3) and type(className) == "string" then
+		ShopService.BuyWeapon(player, className)
+	end
+end)
+R.BuyUpgrade.OnServerEvent:Connect(function(player, kind)
+	if allowed(player, "Buy", 0.3) and type(kind) == "string" then
+		ShopService.BuyUpgrade(player, kind)
 	end
 end)
 R.PlaceEgg.OnServerEvent:Connect(function(player, rarity, position)
@@ -253,6 +270,10 @@ while true do
 				weapon = Config.weaponInfo(profile.class, profile.weaponTier[profile.class] or 0).name,
 				eggs = profile.eggs,
 				carrying = player:GetAttribute("CarryingEgg"),
+				weaponTier = profile.weaponTier,
+				maxWeaponTier = Config.maxWeaponTier(profile.world2Unlocked),
+				upgrades = profile.upgrades[profile.class],
+				bestPet = PetService.BestRarity(profile),
 			})
 		end
 	end

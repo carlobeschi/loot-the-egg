@@ -25,6 +25,17 @@ local function ownsPetOfRarity(profile, rarity)
 	return false
 end
 
+-- the rarest pet you own (0 if none), for the Rebirth and World Gate windows
+function PetService.BestRarity(profile)
+	local best = 0
+	for _, list in ipairs({ profile.pets, profile.stash }) do
+		for _, pet in ipairs(list) do
+			best = math.max(best, pet.rarity)
+		end
+	end
+	return best
+end
+
 -- ---------- income ----------
 function PetService.IncomePerSecond(profile)
 	local sum = 0

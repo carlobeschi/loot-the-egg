@@ -86,7 +86,8 @@ local function makeTool(className, tier)
 end
 
 -- Gives the player the weapon for their class and current tier, and sets their health and speed.
-function CombatService.Equip(player)
+-- keepHealth = true keeps the same share of health (used after buying something, so it isn't a free heal).
+function CombatService.Equip(player, keepHealth)
 	local profile = DataService.Get(player)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -95,8 +96,9 @@ function CombatService.Equip(player)
 	end
 	local className = profile.class
 	local upgrades = profile.upgrades[className]
+	local share = (keepHealth and humanoid.MaxHealth > 0) and (humanoid.Health / humanoid.MaxHealth) or 1
 	humanoid.MaxHealth = Config.maxHealth(className, upgrades.health)
-	humanoid.Health = humanoid.MaxHealth
+	humanoid.Health = humanoid.MaxHealth * share
 	humanoid.WalkSpeed = Config.walkSpeed(className, upgrades.speed)
 
 	-- remove old weapons (in the backpack and in the hand)
