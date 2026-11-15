@@ -274,6 +274,22 @@ if RunService:IsStudio() then
 			for _, enemy in ipairs(tower.Enemies:GetChildren()) do
 				DungeonService.DamageEnemy(enemy, 1e9, player)
 			end
+		elseif command == "zoo" then
+			-- show one of every pet in your pen (only on screen: your saved pets don't change; re-equip to undo)
+			local all = {}
+			for rarity, kinds in ipairs(Config.Data.pets) do
+				for kind in ipairs(kinds) do
+					table.insert(all, { rarity = rarity, kind = kind })
+				end
+			end
+			PlotService.RefreshPets(player, { pets = all })
+		elseif command == "reset" then
+			-- empty Dungeon <value> so the next visit fills it again
+			local tower = workspace:FindFirstChild("Towers") and workspace.Towers:FindFirstChild("Tower" .. tostring(value))
+			if not tower then
+				return "no Tower" .. tostring(value)
+			end
+			TowerService.Reset(tower)
 		elseif command == "travel" then
 			World2Service.Travel(player, value or 2)
 		elseif command == "profile" then

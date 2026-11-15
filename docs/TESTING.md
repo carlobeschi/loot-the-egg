@@ -82,3 +82,20 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 - [ ] Settings > "Music and sounds" (or M) mutes everything; it stays off after you rejoin.
 - [ ] The minimap (left side) shows the town, plots (yours gold), dungeons (green open, red locked) and an arrow
       for you that turns as you turn. Taking an egg makes that dungeon flash. In World 2 it shows Dungeons 10 to 18.
+
+## Slice 9: better-looking pets and dungeons, dungeon reset
+- [ ] Hatched pets look like little animals: a chick and duckling with beaks and orange feet, a piglet with a
+      snout and curly tail, a bunny with long ears, a fox and wolf pup with bushy tails, dragons with horns,
+      spikes and bat wings, a griffin, phoenixes with tail feathers, a unicorn with a glowing horn, a kitsune
+      with five tails, a cloud lion with a fluffy mane. Rare ones glow; the rarest sparkle.
+      Cheat: `game.ReplicatedStorage.StudioCheat:InvokeServer("zoo")` shows all 16 in your pen (only until you
+      re-equip, your saved pets don't change).
+- [ ] Pets walk forward (not sideways) in little bouncy steps; the bunny and chick hop; flying pets float and bob.
+- [ ] Dungeons look like castles: stone walls, battlements, round corner towers with pointed roofs and flags,
+      glowing windows, a door frame with two torches and two banners. Each dungeon has its own colours; World 2
+      ones are black basalt with lava cracks and skulls over the door.
+- [ ] Inside: real torches with flames on the walls, a pillar in each corner, a glowing circle on each floor,
+      bones, rubble, crates and hanging chains. The boss floor has a red circle and two fire bowls.
+- [ ] Die inside a dungeon (or while carrying its egg): "Dungeon N has reset". Walking in again fills it from the
+      start. If another player is still alive inside, it does not reset. Cheat: `InvokeServer("reset", 1)`.
+- [ ] World 2 bosses have a bit less health (0.72 instead of 0.78) and hit for 18 instead of 19.

@@ -150,12 +150,12 @@ function Config.enemyStats(depth, floorIndex, kind, world)
 	local d = depth + floorIndex * 0.7
 	local hp
 	if kind == "boss" then
-		hp = math.round((150 + 80 * d) * ((world == 2) and 0.78 or 0.8)) -- World 1 bosses were nerfed in the JS game
+		hp = math.round((150 + 80 * d) * ((world == 2) and 0.72 or 0.8)) -- World 1 bosses were nerfed in the JS game; World 2 ones a bit more in Roblox (0.78 in JS)
 	else
 		local mult = (kind == "tank") and 3.5 or ((kind == "runner") and 0.6 or 1)
 		hp = math.round((6 + math.floor(d * 2.5)) * mult)
 	end
-	local baseDamage = (kind == "boss") and ((world == 2) and 19 or 18) or ((kind == "tank") and 15 or ((kind == "runner") and 7 or 9))
+	local baseDamage = (kind == "boss") and 18 or ((kind == "tank") and 15 or ((kind == "runner") and 7 or 9)) -- World 2 bosses hit 18 too (19 in JS)
 	local speed = (kind == "boss") and (0.8 + 0.05 * d) or (((kind == "tank") and 0.65 or ((kind == "runner") and 1.5 or 1)) + d * 0.04)
 	return {
 		health = math.max(1, hp),
