@@ -31,7 +31,11 @@ local function setSign(plot, text)
 end
 
 function PlotService.Init()
-	local folder = workspace:WaitForChild("Plots")
+	local folder = workspace:WaitForChild("Plots", 10)
+	if not folder then
+		warn("[PlotService] no Folder named Plots in Workspace. Run studio-tools/SetupTestPlace.lua in the Command Bar.")
+		return
+	end
 	for _, plot in ipairs(folder:GetChildren()) do
 		if plot:IsA("Model") then
 			owners[plot] = false
@@ -198,7 +202,7 @@ function PlotService.RefreshPets(player, profile)
 	for _, pet in ipairs(profile.pets) do
 		local def = Data.pets[pet.rarity][pet.kind]
 		local model, body, extra = makePet(def, pet.rarity)
-		local start = randomPointIn(area, area.Position.Y + 1.5 * PET_SCALE[pet.rarity])
+		local start = randomPointIn(area, area.Position.Y + area.Size.Y / 2 + 1.1 * PET_SCALE[pet.rarity])
 		placeAndWeld(body, extra, CFrame.new(start))
 		model.Parent = folder
 		wander(model, body, area)

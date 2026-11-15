@@ -1,32 +1,22 @@
---[[ TestCheats  (NOT a game script - for testing only. Never put this in the published game)
-  How to use: start a playtest (Test tab > Play), then in the Test tab switch to SERVER view (the Client/Server
-  toggle button). Open View > Command Bar and paste ONE of the snippets below.
-  They change the server's copy of your data, and the HUD updates within a second.
+--[[ TestCheats  (NOT a game script - for testing only)
+  How to use: start a playtest (Test tab > Play), then switch to SERVER view (the Client/Server toggle in the
+  Test tab). Open View > Command Bar and paste ONE line below, then press Enter.
+
+  Why a "Cheat" function: the Command Bar runs separately from the game's scripts, so requiring DataService
+  there gives you a fresh, empty copy. Main.server.lua makes ServerStorage.Cheat (in Studio only), and calling
+  it runs inside the real game. The HUD updates within a second. It never exists in the published game.
 ]]
+local Cheat = game:GetService("ServerStorage"):WaitForChild("Cheat")
 
--- ===== A) lots of coins, eggs, and a high pen level =====
-local SSS = game:GetService("ServerScriptService")
-local DataService = require(SSS.DataService)
-local PlotService = require(SSS.PlotService)
-local player = game.Players:GetPlayers()[1]
-local profile = DataService.Get(player)
-profile.coins += 50000000
-for rarity = 1, 8 do
-	profile.eggs[rarity] += 2 -- two eggs of every rarity to hatch
-end
-profile.penLevel = 7
-PlotService.ApplyPenStyle(player, profile.penLevel)
-print("Gave coins, eggs and pen level 7 to " .. player.Name)
+print(Cheat:Invoke("coins", 50000000)) -- add 50 million coins
+-- print(Cheat:Invoke("eggs", 2))         -- two eggs of every rarity (press Hatch to hatch them)
+-- print(Cheat:Invoke("pen", 7))          -- pen level 7 (Amethyst fence)
+-- print(Cheat:Invoke("rebirths", 5))     -- set rebirths to 5
+-- print(Cheat:Invoke("weapon", 5))       -- weapon tier 5 for your current class (0 to 11)
+-- print(Cheat:Invoke("class", "Wizard")) -- switch class: "Knight", "Wizard" or "Bowman"
+-- print(Cheat:Invoke("boss", 3))         -- spawn an awake depth-3 boss in front of you (it drops an egg)
 
--- ===== B) check the rebirth and World Gate rules fast (paste after A) =====
--- local PetService = require(game.ServerScriptService.PetService)
--- profile.pets = { { rarity = 6, kind = 1 } }
--- profile.rebirths = 5
--- print("Rebirth:", PetService.Rebirth(player))
--- print("World 2:", PetService.UnlockWorld2(player))
--- print("world2Unlocked =", profile.world2Unlocked)
-
--- ===== C) see the egg odds the game uses (works in any context) =====
+-- See the egg odds the game uses (works in any view, because Config has no saved data):
 -- local Config = require(game.ReplicatedStorage.Config)
 -- for _, depth in ipairs({ 1, 9, 18 }) do
 --     local w, total = Config.eggWeights(depth), 0
@@ -35,10 +25,3 @@ print("Gave coins, eggs and pen level 7 to " .. player.Name)
 --     for i, x in ipairs(w) do out[i] = string.format("%s %.1f%%", Config.Data.rarities[i], x / total * 100) end
 --     print("Depth " .. depth .. ": " .. table.concat(out, ", "))
 -- end
-
--- ===== D) spawn a test boss near you, to try the egg + aggro + banking loop =====
--- local DungeonService = require(game.ServerScriptService.DungeonService)
--- local root = player.Character.HumanoidRootPart
--- DungeonService.SpawnEnemy(root.CFrame * CFrame.new(0, 0, -25), 3, 1, "boss", 1, workspace, function(position)
---     DungeonService.OnBossDefeated(player, 3, 1, position)
--- end)
