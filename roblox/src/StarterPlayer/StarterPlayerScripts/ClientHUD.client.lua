@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
-for _, name in ipairs({ "EquipBest", "Rebirth", "SetShowPets", "ChooseClass", "State", "Notice" }) do
+for _, name in ipairs({ "EquipBest", "SetShowPets", "ChooseClass", "State", "Notice" }) do
 	remotes:WaitForChild(name)
 end
 
@@ -55,7 +55,7 @@ local notice = label(gui, UDim2.fromOffset(520, 36), UDim2.new(0.5, -260, 0, 14)
 notice.Visible = false
 
 button("Equip Best", 0, Color3.fromRGB(255, 211, 74), function() remotes.EquipBest:FireServer() end)
-local rebirthButton = button("Rebirth", 1, Color3.fromRGB(255, 154, 208), function() remotes.Rebirth:FireServer() end)
+local rebirthButton = button("Rebirth", 1, Color3.fromRGB(255, 154, 208), function() player:SetAttribute("OpenWindow", "Rebirth") end) -- opens the Rebirth window (ClientShops)
 
 -- Settings panel
 local panel = Instance.new("Frame")
