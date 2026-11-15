@@ -5,6 +5,7 @@ Versions are the published artifact versions of `game/index.html`. Earlier histo
 ## Unreleased
 - Project turned into a repository (this commit history starts here).
 - Roblox: combat (sword swing, staff bolt with blast, piercing arrows) worked out on the server; class picker; a generated test tower (Dungeon 1) with sleeping enemies and a boss that slams, summons help and enrages; dying with the egg loses it.
+- Roblox: Dungeons 1 to 9 south of town, each gate locked until you beat the one before (red/green per player), and the boss charge attack.
 - Roblox: shops and screens. Town huts for the Blacksmith (weapon tiers), Trainer (health, speed, ability upgrades) and World Gate; the pen sign opens upgrade, sell and equip-best; the Rebirth button shows the requirements first.
 - Roblox: `roblox/tools/luau_check.sh` type-checks the scripts with luau-lsp; `docs/TESTING.md` lists what to try per slice.
 - Roblox: eggs are backpack items (one per rarity, with a count). Equip one and click in your pen to place it; it counts down, then press E to hatch it. Placed eggs are saved. The old Hatch button is gone. Asked for by Lorenzo after the first Play test.

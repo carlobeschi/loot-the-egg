@@ -24,11 +24,12 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/ServerScriptService/CombatService.lua` | ServerScriptService > ModuleScript | Sword, staff and bow: gives your weapon, works out hits on the server |
 | `src/ServerScriptService/EggService.lua` | ServerScriptService > ModuleScript | Eggs as backpack items; placing them in your pen; countdown and hatching |
 | `src/ServerScriptService/ShopService.lua` | ServerScriptService > ModuleScript | Builds the town huts (Blacksmith, Trainer, World Gate), pen sign prompts, and does the buying |
-| `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds the test tower (Dungeon 1) from Parts, fills it with enemies and a boss when you walk in |
+| `src/ServerScriptService/TowerService.lua` | ServerScriptService > ModuleScript | Builds Dungeons 1 to 9 from Parts with gates, fills a tower with enemies and a boss when you walk in |
 | `src/ServerScriptService/Main.server.lua` | ServerScriptService > **Script** named `Main` | Starts everything, makes the RemoteEvents, runs the coin income loop |
 | `src/StarterPlayer/StarterPlayerScripts/ClientHUD.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Coins display, Equip Best, Rebirth, class picker, Settings with "Show my pets" |
 | `src/StarterPlayer/StarterPlayerScripts/ClientEggs.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows where an egg will go and places it when you click in your pen |
 | `src/StarterPlayer/StarterPlayerScripts/ClientShops.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | The shop, trainer, pen, rebirth and World Gate windows |
+| `src/StarterPlayer/StarterPlayerScripts/ClientTowers.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows each dungeon gate as locked (red) or open (green) for you |
 | `src/StarterPlayer/StarterPlayerScripts/ClientCombat.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Sends your aim to the server when you click with your weapon |
 | `studio-tools/SetupTestPlace.lua`, `TestCheats.lua` | Pasted into Studio's Command Bar, never synced | Builds a test map; testing cheats |
 | `tools/export_config.js` | Stays on your computer | Re-creates `ConfigData.lua` from the JavaScript game |
@@ -105,8 +106,8 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 Done so far: combat (sword, staff, bow in `CombatService`), one generated test tower with a boss (`TowerService`), boss slam, summons and enrage (`DungeonService`). Still to do:
 
 1. **First Play test** and fixing the errors it shows (nothing here has run in Studio yet).
-2. **Boss charge** (the JS `chargeAI`) and the class abilities (Shield Slam, Blink Burst, Arrow Volley).
-3. **More towers:** call `TowerService.Build` for depths 2 to 9 and lock each door until `profile.bestDepth >= depth - 1`. Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
+2. **Class abilities** (Shield Slam, Blink Burst, Arrow Volley).
+3. **World 2** map and its towers (depths 10 to 18). Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
 5. **Real models, egg visuals, sound and music.**
 
 ## Checking the scripts without Studio
