@@ -8,3 +8,4 @@ fs.writeFileSync(tmp,scripts[scripts.length-1][1]);
 cp.execFileSync('node',['--check',tmp],{stdio:'inherit'});console.log('syntax ok');
 const out=cp.execFileSync('node',[path.join(__dirname,'stub.js')]).toString().trim();
 console.log('generation:',out);if(out!=='ok')process.exit(1);
+cp.execFileSync("node",[path.join(__dirname,"lua_check.js")],{stdio:"inherit"});
