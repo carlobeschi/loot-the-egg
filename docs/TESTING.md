@@ -66,3 +66,11 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 - [ ] You can't travel while carrying an egg ("Bring the egg to town first!").
 - [ ] Die in World 2: you come back in the World 2 town, not at home.
 - [ ] The portal behind the town sign ("Go home", press E) takes you back to your plot with normal light.
+
+## Slice 7: ready for more than one player
+- [ ] Save lock: in Studio, NOT in Play mode, paste `roblox/studio-tools/TestSaveLock.lua` into the Command Bar.
+      Every line says PASS.
+- [ ] Egg alarm: take an egg from one dungeon. Only that dungeon's enemies wake up and chase you; enemies in other
+      dungeons stay asleep. Banking it calms them down.
+- [ ] With a published place and two players (Test > Clients and Servers, 2 players): one player's egg doesn't
+      wake the dungeon the other player is in.
