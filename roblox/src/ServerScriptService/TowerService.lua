@@ -54,6 +54,9 @@ function TowerService.Build(origin, depth, world, parent)
 	model:SetAttribute("Depth", depth)
 	model:SetAttribute("World", world)
 	model:SetAttribute("Floors", floors)
+	-- for the minimap: with streaming on, a far tower's parts aren't on the client, but the Model and these are
+	model:SetAttribute("Center", origin)
+	model:SetAttribute("Size", SIZE)
 
 	local base = CFrame.new(origin) * CFrame.Angles(0, math.pi, 0) -- door faces the town
 	local rampX = half - WALL - RAMP_W / 2 -- distance of a ramp's middle from the tower's middle

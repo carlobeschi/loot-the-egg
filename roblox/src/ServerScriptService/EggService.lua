@@ -13,6 +13,7 @@ local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Data = Config.Data
+local Sounds = require(ReplicatedStorage.Config:WaitForChild("Sounds"))
 
 local EggService = {}
 local DataService, PlotService, PetService
@@ -191,6 +192,7 @@ function hatchPlaced(player, entry, egg)
 		return
 	end
 	table.remove(profile.placedEggs, index)
+	Sounds.PlayAt("hatch", egg.Position)
 	egg:Destroy()
 	local pet, stored = PetService.AddPet(player, entry.rarity)
 	if pet then

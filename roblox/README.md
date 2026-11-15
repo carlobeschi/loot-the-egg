@@ -32,6 +32,9 @@ With Rojo (recommended, see "Using Rojo" below) the files in `src/` sync straigh
 | `src/StarterPlayer/StarterPlayerScripts/ClientShops.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | The shop, trainer, pen, rebirth and World Gate windows |
 | `src/StarterPlayer/StarterPlayerScripts/ClientTowers.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Shows each dungeon gate as locked (red) or open (green) for you |
 | `src/StarterPlayer/StarterPlayerScripts/ClientCombat.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Sends your aim to the server when you click with your weapon |
+| `src/ReplicatedStorage/Config/Sounds.lua` | ReplicatedStorage > Config > ModuleScript `Sounds` | Every sound effect in one list (built-in Roblox sounds), and helpers to play them |
+| `src/StarterPlayer/StarterPlayerScripts/ClientMusic.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | The eerie background music, and muting music and sounds from Settings |
+| `src/StarterPlayer/StarterPlayerScripts/ClientMinimap.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | The minimap |
 | `src/StarterPlayer/StarterPlayerScripts/ClientWorld.client.lua` | StarterPlayer > StarterPlayerScripts > **LocalScript** | Ember lighting while you are in World 2 |
 | `studio-tools/SetupTestPlace.lua`, `TestCheats.lua` | Pasted into Studio's Command Bar, never synced | Builds a test map; testing cheats |
 | `tools/export_config.js` | Stays on your computer | Re-creates `ConfigData.lua` from the JavaScript game |
@@ -107,7 +110,7 @@ Then paste the new `ConfigData.lua` into Studio. It carries the rarities, colors
 
 Done so far: combat and Q abilities (`CombatService`), Dungeons 1 to 9 with gates (`TowerService`), boss slam, charge, summons and enrage (`DungeonService`), eggs as backpack items (`EggService`), shops and screens (`ShopService`), World 2 with Dungeons 10 to 18 (`World2Service`). Slices 1 to 6 were Play-tested in Studio. Still to do:
 
-1. **Real models, egg visuals, sound and music.** Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
+1. **Real models and egg visuals.** Sound, music and the minimap are done; swap the built-in sounds in `Config/Sounds.lua` for your own uploads if you like. Enemies use `MoveTo` for now; switch to PathfindingService if they get stuck on ramps.
 2. **Private publish** for up to 10 early testers, then the content questionnaire (see `docs/HANDOVER.md`).
 
 ## Checking the scripts without Studio

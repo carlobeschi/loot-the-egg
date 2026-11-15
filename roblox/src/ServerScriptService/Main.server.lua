@@ -8,6 +8,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+require(ReplicatedStorage.Config:WaitForChild("Sounds")).Group("Effects") -- every sound effect plays through this group
 local DataService = require(ServerScriptService:WaitForChild("DataService"))
 local PlotService = require(ServerScriptService:WaitForChild("PlotService"))
 local PetService = require(ServerScriptService:WaitForChild("PetService"))
@@ -36,6 +37,7 @@ local R = {
 	UnlockWorld2 = makeRemote("UnlockWorld2"),
 	Collect = makeRemote("Collect"),
 	SetShowPets = makeRemote("SetShowPets"),
+	SetSoundOn = makeRemote("SetSoundOn"), -- client -> server: true | false (music and sounds, from Settings)
 	PlaceEgg = makeRemote("PlaceEgg"),
 	BuyWeapon = makeRemote("BuyWeapon"), -- client -> server: class name
 	BuyUpgrade = makeRemote("BuyUpgrade"), -- client -> server: "health" | "speed" | "ability"
@@ -166,6 +168,12 @@ R.SetShowPets.OnServerEvent:Connect(function(player, value)
 	local profile = DataService.Get(player)
 	if profile and type(value) == "boolean" then
 		profile.showPets = value
+	end
+end)
+R.SetSoundOn.OnServerEvent:Connect(function(player, value)
+	local profile = DataService.Get(player)
+	if profile and type(value) == "boolean" then
+		profile.soundOn = value
 	end
 end)
 
@@ -309,6 +317,7 @@ while true do
 				capacity = Config.penCapacity(profile.penLevel),
 				world2 = profile.world2Unlocked,
 				showPets = profile.showPets,
+				soundOn = profile.soundOn,
 				class = profile.class,
 				weapon = Config.weaponInfo(profile.class, profile.weaponTier[profile.class] or 0).name,
 				eggs = profile.eggs,

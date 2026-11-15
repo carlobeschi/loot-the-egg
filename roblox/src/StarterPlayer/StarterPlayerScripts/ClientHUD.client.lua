@@ -1,17 +1,22 @@
 --[[ ClientHUD  (LocalScript, put it in StarterPlayer > StarterPlayerScripts)
   A simple on-screen HUD: coins and income, plus the Equip Best, Rebirth and Settings buttons.
-  The Settings panel has the "Show my pets" switch. It hides your pets on YOUR screen only.
+  The Settings panel has the "Show my pets" switch (it hides your pets on YOUR screen only) and the
+  "Music and sounds" switch (M on a keyboard does the same). ClientMusic listens for the SoundOn attribute.
 ]]
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+local Sounds = require(ReplicatedStorage:WaitForChild("Config"):WaitForChild("Sounds"))
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
-for _, name in ipairs({ "EquipBest", "SetShowPets", "ChooseClass", "State", "Notice" }) do
+for _, name in ipairs({ "EquipBest", "SetShowPets", "SetSoundOn", "ChooseClass", "State", "Notice" }) do
 	remotes:WaitForChild(name)
 end
 
 local showPets = true
+local soundOn = true
 
 -- ---------- building the UI ----------
 local gui = Instance.new("ScreenGui")
@@ -59,8 +64,8 @@ local rebirthButton = button("Rebirth", 1, Color3.fromRGB(255, 154, 208), functi
 
 -- Settings panel
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(300, 150)
-panel.Position = UDim2.new(0.5, -150, 0.5, -75)
+panel.Size = UDim2.fromOffset(300, 200)
+panel.Position = UDim2.new(0.5, -150, 0.5, -100)
 panel.BackgroundColor3 = Color3.fromRGB(30, 50, 80)
 panel.Visible = false
 panel.Parent = gui
@@ -73,9 +78,16 @@ petsToggle.Font = Enum.Font.FredokaOne
 petsToggle.TextScaled = true
 petsToggle.Parent = panel
 Instance.new("UICorner", petsToggle)
+local soundToggle = Instance.new("TextButton")
+soundToggle.Size = UDim2.new(1, -20, 0, 44)
+soundToggle.Position = UDim2.fromOffset(10, 106)
+soundToggle.Font = Enum.Font.FredokaOne
+soundToggle.TextScaled = true
+soundToggle.Parent = panel
+Instance.new("UICorner", soundToggle)
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(1, -20, 0, 34)
-closeButton.Position = UDim2.fromOffset(10, 106)
+closeButton.Position = UDim2.fromOffset(10, 156)
 closeButton.Text = "Close"
 closeButton.Font = Enum.Font.FredokaOne
 closeButton.TextScaled = true
@@ -98,6 +110,7 @@ for i, className in ipairs({ "Knight", "Wizard", "Bowman" }) do
 	Instance.new("UICorner", b)
 	b.MouseButton1Click:Connect(function()
 		remotes.ChooseClass:FireServer(className)
+		Sounds.PlayLocal("classPick")
 	end)
 end
 
@@ -136,6 +149,26 @@ petsToggle.MouseButton1Click:Connect(function()
 	applyPetVisibility()
 end)
 
+-- ---------- music and sounds on / off ----------
+local function applySound()
+	soundToggle.Text = "Music and sounds: " .. (soundOn and "ON" or "OFF")
+	soundToggle.BackgroundColor3 = soundOn and Color3.fromRGB(111, 209, 111) or Color3.fromRGB(255, 106, 106)
+	player:SetAttribute("SoundOn", soundOn) -- ClientMusic mutes the music and the effects from this
+end
+
+local function toggleSound()
+	soundOn = not soundOn
+	remotes.SetSoundOn:FireServer(soundOn) -- saved with your profile
+	applySound()
+end
+soundToggle.MouseButton1Click:Connect(toggleSound)
+UserInputService.InputBegan:Connect(function(input, typing)
+	if not typing and input.KeyCode == Enum.KeyCode.M then
+		toggleSound()
+	end
+end)
+applySound()
+
 -- pets get rebuilt by the server whenever they change, so re-apply the setting each time
 task.spawn(function()
 	while true do
@@ -156,6 +189,8 @@ remotes.State.OnClientEvent:Connect(function(s)
 	info2.Text = s.class .. " - " .. s.weapon .. "   Q = ability" .. "   Eggs in backpack " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
 	if firstState then
 		showPets = s.showPets
+		soundOn = s.soundOn ~= false
+		applySound()
 		firstState = false
 	end
 end)
