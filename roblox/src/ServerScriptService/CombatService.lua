@@ -17,6 +17,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local CombatService = {}
 local DataService, DungeonService
 local lastAttack = {} -- [Player] = os.clock() of their last attack
+local lastAbility = {} -- [Player] = os.clock() of their last ability
 local projectiles = {} -- moving bolts and arrows
 local projectileFolder
 
@@ -192,7 +193,7 @@ local function explode(player, position, tier)
 	Debris:AddItem(blast, 0.25)
 end
 
-local function launch(player, kind, origin, direction, tier, color)
+local function launch(player, kind, origin, direction, tier, color, speed, pierce)
 	local c = (kind == "bolt") and Config.Combat.Wizard or Config.Combat.Bowman
 	local p = Instance.new("Part")
 	p.Name = (kind == "bolt") and "Bolt" or "Arrow"
@@ -216,9 +217,9 @@ local function launch(player, kind, origin, direction, tier, color)
 		player = player,
 		tier = tier,
 		position = origin,
-		velocity = direction * c.speed,
+		velocity = direction * (speed or c.speed),
 		life = c.life,
-		pierce = (kind == "arrow") and Config.arrowPierce(tier) or 1,
+		pierce = pierce or ((kind == "arrow") and Config.arrowPierce(tier) or 1),
 		hit = {},
 	})
 end
@@ -328,6 +329,85 @@ function CombatService.Attack(player, aim)
 	end
 end
 
+-- ---------- abilities (Q, or the Ability button on phones), from ability() in the JS game ----------
+--   Knight - Shield Slam: hurts and knocks back everything around you
+--   Wizard - Blink Burst: an explosion where you stand, then you blink forward
+--   Bowman - Arrow Volley: a fan of arrows
+-- The cooldown gets shorter with the Ability upgrade (Config.abilityCooldownSeconds).
+function CombatService.Ability(player, aim)
+	local profile = DataService.Get(player)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not profile or not humanoid or humanoid.Health <= 0 or not root then
+		return false
+	end
+	local className = profile.class
+	local level = profile.upgrades[className].ability or 0
+	local now = os.clock()
+	if now - (lastAbility[player] or -math.huge) < Config.abilityCooldownSeconds(level) - 0.1 then
+		return false
+	end
+	lastAbility[player] = now
+
+	local direction = root.CFrame.LookVector
+	if typeof(aim) == "Vector3" and aim.X == aim.X and aim.Z == aim.Z and Vector3.new(aim.X, 0, aim.Z).Magnitude > 0.01 then
+		direction = aim
+	end
+	direction = Vector3.new(direction.X, 0, direction.Z).Unit
+	local tier = profile.weaponTier[className] or 0
+	local origin = root.Position
+
+	if className == "Knight" then
+		local radius = (100 + level * 6) / 9
+		local damage = damageFor("Knight", tier, 5 + level)
+		for _, e in ipairs(enemyRoots()) do
+			local offset = e.root.Position - origin
+			local flat = Vector3.new(offset.X, 0, offset.Z)
+			if flat.Magnitude < radius + e.radius and math.abs(offset.Y) < Config.SameFloorHeight + e.radius then
+				DungeonService.DamageEnemy(e.model, damage, player)
+				if flat.Magnitude > 0.1 then
+					local push = (e.model:GetAttribute("Kind") == "boss") and 12 or 60
+					e.root.AssemblyLinearVelocity += flat.Unit * push + Vector3.new(0, 10, 0)
+				end
+			end
+		end
+		local ring = Instance.new("Part")
+		ring.Name = "ShieldSlam"
+		ring.Shape = Enum.PartType.Cylinder
+		ring.Size = Vector3.new(0.3, radius * 2, radius * 2)
+		ring.CFrame = CFrame.new(origin - Vector3.new(0, 2.8, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		ring.Anchored = true
+		ring.CanCollide = false
+		ring.CanQuery = false
+		ring.CanTouch = false
+		ring.Material = Enum.Material.Neon
+		ring.Color = Color3.fromRGB(217, 178, 90)
+		ring.Transparency = 0.5
+		ring.Parent = projectileFolder
+		Debris:AddItem(ring, 0.3)
+	elseif className == "Wizard" then
+		explode(player, origin, tier)
+		-- blink forward, stopping short of any wall
+		local distance = (140 + level * 10) / 9
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = { character, projectileFolder }
+		local hit = workspace:Raycast(origin, direction * distance, params)
+		local travel = hit and math.max(0, (hit.Position - origin).Magnitude - 2) or distance
+		root.CFrame = CFrame.lookAt(origin + direction * travel, origin + direction * (travel + 1))
+	else
+		local n = 7 + math.floor(level / 2)
+		local speed = 660 / 9
+		for i = 0, n - 1 do
+			local angle = (i - (n - 1) / 2) * (1.05 / (n - 1))
+			local dir = CFrame.Angles(0, angle, 0):VectorToWorldSpace(direction)
+			launch(player, "arrow", origin + dir * (20 / 9), dir, tier, Color3.fromRGB(127, 192, 108), speed, 2)
+		end
+	end
+	return true
+end
+
 function CombatService.SetClass(player, className)
 	local profile = DataService.Get(player)
 	if not profile or not Config.Combat[className] or profile.class == className then
@@ -351,6 +431,7 @@ function CombatService.Init(dataService, dungeonService)
 	RunService.Heartbeat:Connect(stepProjectiles)
 	Players.PlayerRemoving:Connect(function(player)
 		lastAttack[player] = nil
+		lastAbility[player] = nil
 	end)
 end
 

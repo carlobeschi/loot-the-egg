@@ -153,7 +153,7 @@ remotes.State.OnClientEvent:Connect(function(s)
 	for _, n in ipairs(s.eggs or {}) do
 		eggCount += n
 	end
-	info2.Text = s.class .. " - " .. s.weapon .. "   Eggs in backpack " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
+	info2.Text = s.class .. " - " .. s.weapon .. "   Q = ability" .. "   Eggs in backpack " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
 	if firstState then
 		showPets = s.showPets
 		firstState = false
