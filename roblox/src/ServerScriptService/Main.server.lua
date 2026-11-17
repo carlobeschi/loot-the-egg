@@ -44,7 +44,7 @@ local R = {
 	OpenWindow = makeRemote("OpenWindow"), -- server -> client: "Weapons" | "Upgrades" | "WorldGate" | "Pen" -- client -> server: (rarity, spot clicked in the pen)
 	Attack = makeRemote("Attack"),
 	Ability = makeRemote("Ability"), -- client -> server: "I used my ability, aiming this way" -- client -> server: "I attacked, aiming this way"
-	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman"
+	ChooseClass = makeRemote("ChooseClass"), -- client -> server: "Knight" | "Wizard" | "Bowman" (only once, at the start)
 	Travel = makeRemote("Travel"), -- client -> server: 1 (home) or 2 (World 2), from the World Gate window
 	State = makeRemote("State"), -- server -> client: your numbers for the HUD
 	Notice = makeRemote("Notice"), -- server -> client: a message to show
@@ -253,7 +253,7 @@ if RunService:IsStudio() then
 			profile.weaponTier[profile.class] = math.clamp(value or 5, 0, 11)
 			CombatService.Equip(player)
 		elseif command == "class" then
-			CombatService.SetClass(player, value)
+			CombatService.SetClass(player, value, true) -- test cheat: change class even after picking
 		elseif command == "boss" then
 			local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if root then
@@ -341,6 +341,7 @@ while true do
 				showPets = profile.showPets,
 				soundOn = profile.soundOn,
 				class = profile.class,
+				classChosen = profile.classChosen,
 				weapon = Config.weaponInfo(profile.class, profile.weaponTier[profile.class] or 0).name,
 				eggs = profile.eggs,
 				carrying = player:GetAttribute("CarryingEgg"),

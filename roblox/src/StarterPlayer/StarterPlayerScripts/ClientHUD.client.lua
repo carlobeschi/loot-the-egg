@@ -2,6 +2,7 @@
   A simple on-screen HUD: coins and income, plus the Equip Best, Rebirth and Settings buttons.
   The Settings panel has the "Show my pets" switch (it hides your pets on YOUR screen only) and the
   "Music and sounds" switch (M on a keyboard does the same). ClientMusic listens for the SoundOn attribute.
+  A new player first sees the "Choose your class" screen; the class they pick can't be changed later.
 ]]
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -95,20 +96,42 @@ closeButton.Parent = panel
 Instance.new("UICorner", closeButton)
 closeButton.MouseButton1Click:Connect(function() panel.Visible = false end)
 
--- class picker (choosing a class respawns your weapon with that class's health and speed)
+-- class picker: shown once, at the start of a new game. The class you pick is yours for good.
 local classColors = { Knight = Color3.fromRGB(217, 178, 90), Wizard = Color3.fromRGB(157, 143, 255), Bowman = Color3.fromRGB(127, 192, 108) }
+local classBlurbs = { Knight = "Sword: wide swings up close", Wizard = "Staff: exploding magic bolts", Bowman = "Bow: fast arrows from far away" }
+local picker = Instance.new("Frame")
+picker.Size = UDim2.fromOffset(380, 300)
+picker.AnchorPoint = Vector2.new(0.5, 0.5)
+picker.Position = UDim2.fromScale(0.5, 0.5)
+picker.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+picker.BackgroundTransparency = 0.05
+picker.Visible = false
+picker.ZIndex = 20
+picker.Parent = gui
+Instance.new("UICorner", picker)
+local pickTitle = label(picker, UDim2.new(1, -20, 0, 40), UDim2.fromOffset(10, 8), "Choose your class")
+pickTitle.ZIndex = 21
+local pickNote = label(picker, UDim2.new(1, -20, 0, 26), UDim2.fromOffset(10, 48), "Choose carefully: you can't change it later!")
+pickNote.ZIndex = 21
+local pickedAt = -100 -- when we sent our pick (if the server missed it, the screen comes back)
 for i, className in ipairs({ "Knight", "Wizard", "Bowman" }) do
 	local b = Instance.new("TextButton")
-	b.Size = UDim2.fromOffset(104, 36)
-	b.Position = UDim2.fromOffset(14 + (i - 1) * 112, 100) -- under the coins, clear of the backpack bar
+	b.Size = UDim2.new(1, -20, 0, 62)
+	b.Position = UDim2.fromOffset(10, 82 + (i - 1) * 70)
 	b.BackgroundColor3 = classColors[className]
 	b.TextColor3 = Color3.new(0, 0, 0)
 	b.Font = Enum.Font.FredokaOne
 	b.TextScaled = true
-	b.Text = className
-	b.Parent = gui
+	b.Text = className .. "\n" .. classBlurbs[className]
+	b.ZIndex = 21
+	b.Parent = picker
 	Instance.new("UICorner", b)
 	b.MouseButton1Click:Connect(function()
+		if os.clock() - pickedAt < 3 then
+			return
+		end
+		pickedAt = os.clock()
+		picker.Visible = false
 		remotes.ChooseClass:FireServer(className)
 		Sounds.PlayLocal("classPick")
 	end)
@@ -187,6 +210,7 @@ remotes.State.OnClientEvent:Connect(function(s)
 		eggCount += n
 	end
 	info2.Text = s.class .. " - " .. s.weapon .. "   Q = ability" .. "   Eggs in backpack " .. eggCount .. (s.carrying and "   CARRYING AN EGG!" or "")
+	picker.Visible = s.classChosen == false and os.clock() - pickedAt > 3
 	if firstState then
 		showPets = s.showPets
 		soundOn = s.soundOn ~= false

@@ -45,6 +45,7 @@ local function defaults()
 		rebirths = 0,
 		penLevel = 0,
 		class = "Knight",
+		classChosen = false, -- picked at the start of the game, and then it is yours for good
 		weaponTier = { Knight = 0, Wizard = 0, Bowman = 0 },
 		upgrades = { Knight = newUpgrades(), Wizard = newUpgrades(), Bowman = newUpgrades() },
 		bestDepth = 0, -- highest World 1 dungeon beaten
@@ -143,6 +144,9 @@ function DataService.Load(player)
 	end
 	local data
 	if ok and type(result) == "table" then
+		if result.classChosen == nil then
+			result.classChosen = true -- a save from before classes were permanent keeps the class it has
+		end
 		data = reconcile(result, defaults())
 	elseif ok then
 		data = defaults() -- a new player

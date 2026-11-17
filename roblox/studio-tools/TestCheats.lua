@@ -14,7 +14,7 @@ print(Cheat:Invoke("coins", 50000000)) -- add 50 million coins
 -- print(Cheat:Invoke("pen", 7))          -- pen level 7 (Amethyst fence)
 -- print(Cheat:Invoke("rebirths", 5))     -- set rebirths to 5
 -- print(Cheat:Invoke("weapon", 5))       -- weapon tier 5 for your current class (0 to 11)
--- print(Cheat:Invoke("class", "Wizard")) -- switch class: "Knight", "Wizard" or "Bowman"
+-- print(Cheat:Invoke("class", "Wizard")) -- switch class (cheat only; players pick once): "Knight", "Wizard" or "Bowman"
 -- print(Cheat:Invoke("boss", 3))         -- spawn an awake depth-3 boss in front of you (it drops an egg)
 -- print(Cheat:Invoke("depth", 4))        -- pretend you beat Dungeons 1 to 4 (opens up to Dungeon 5)
 -- print(Cheat:Invoke("world2"))          -- unlock World 2 without the World Gate requirements

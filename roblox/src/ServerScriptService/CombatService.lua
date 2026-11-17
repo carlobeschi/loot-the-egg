@@ -411,11 +411,17 @@ function CombatService.Ability(player, aim)
 	return true
 end
 
-function CombatService.SetClass(player, className)
+-- The class is picked once, at the start of the game, and then it can't change.
+-- force = true is only for the Studio test cheat.
+function CombatService.SetClass(player, className, force)
 	local profile = DataService.Get(player)
-	if not profile or not Config.Combat[className] or profile.class == className then
+	if not profile or not Config.Combat[className] then
 		return false
 	end
+	if profile.classChosen and not force then
+		return false
+	end
+	profile.classChosen = true
 	profile.class = className
 	if player.Character then
 		CombatService.Equip(player)
