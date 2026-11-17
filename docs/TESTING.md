@@ -108,3 +108,13 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 - [ ] There are no class buttons on the HUD any more. The Blacksmith only sells weapons for your own class.
 - [ ] An old save (from before this change) keeps the class it had and does not see the picker.
 - [ ] The Studio cheat `InvokeServer("class", "Wizard")` still switches class, for testing.
+
+## Dungeons closer, nicer World 1
+
+- [ ] The nine World 1 dungeons stand in two rows just south of the town (Dungeon 1 straight south of the fountain),
+      much closer to the pens. The back row stands in the gaps of the front row.
+- [ ] Grass ground, a cobblestone town square with a fountain (water spray), benches, lamps and flower beds.
+- [ ] Dirt paths: town to the pens (and between them), town to every dungeon door. Signposts where they split.
+- [ ] Two ponds, bushes, flowers, rocks, a forest around the edges and hills far away.
+- [ ] Nothing blocks a path, a pen, a shop or a dungeon door. Output has no `[WorldDecorService]` warning.
+- [ ] The minimap still shows everything (it fits itself to the new dungeon spots).

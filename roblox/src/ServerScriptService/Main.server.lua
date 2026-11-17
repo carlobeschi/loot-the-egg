@@ -18,6 +18,7 @@ local TowerService = require(ServerScriptService:WaitForChild("TowerService"))
 local EggService = require(ServerScriptService:WaitForChild("EggService"))
 local ShopService = require(ServerScriptService:WaitForChild("ShopService"))
 local World2Service = require(ServerScriptService:WaitForChild("World2Service"))
+local WorldDecorService = require(ServerScriptService:WaitForChild("WorldDecorService"))
 
 -- ---------- remotes (made first, so the client never waits on a service that is still starting) ----------
 local remotes = Instance.new("Folder")
@@ -66,6 +67,11 @@ TowerService.Init(DungeonService, DataService, notice)
 EggService.Init(DataService, PlotService, PetService, notice)
 ShopService.Init(DataService, PlotService, CombatService, R.OpenWindow, notice)
 World2Service.Init(DataService, DungeonService, PlotService, notice)
+-- scenery is only for looks: if it ever fails, the game still runs
+local decorOk, decorError = pcall(WorldDecorService.Build, TowerService.WORLD1_SPOTS)
+if not decorOk then
+	warn("[WorldDecorService] " .. tostring(decorError))
+end
 
 -- Basic anti-spam: each player can use each action at most once per `gap` seconds.
 local lastUse = {}

@@ -516,18 +516,20 @@ function TowerService.Watch(model, base, depth, world, floors)
 	end)
 end
 
--- Where the World 1 dungeons stand: two rows south of the town, the deeper ones further away.
+-- Where the World 1 dungeons stand: two rows just south of the town (the pens are north of it). The back row
+-- stands in the gaps of the front row, so every door can be reached by a straight path.
 local WORLD1_SPOTS = {
-	Vector3.new(0, 0, -150), -- Dungeon 1
-	Vector3.new(120, 0, -150),
-	Vector3.new(-120, 0, -150),
-	Vector3.new(240, 0, -150),
-	Vector3.new(-240, 0, -150),
-	Vector3.new(60, 0, -290),
-	Vector3.new(-60, 0, -290),
-	Vector3.new(180, 0, -290),
-	Vector3.new(-180, 0, -290), -- Dungeon 9
+	Vector3.new(0, 0, -85), -- Dungeon 1
+	Vector3.new(80, 0, -85),
+	Vector3.new(-80, 0, -85),
+	Vector3.new(160, 0, -85),
+	Vector3.new(-160, 0, -85),
+	Vector3.new(40, 0, -170),
+	Vector3.new(-40, 0, -170),
+	Vector3.new(120, 0, -170),
+	Vector3.new(-120, 0, -170), -- Dungeon 9
 }
+TowerService.WORLD1_SPOTS = WORLD1_SPOTS
 
 -- World 2 (Ember Wastes): Dungeons 10 to 14 in the first row south of the World 2 town, 15 to 18 further south.
 -- Offsets from Config.World2Origin.
