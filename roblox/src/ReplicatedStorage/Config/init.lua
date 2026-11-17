@@ -12,6 +12,20 @@ Config.MaxRebirths = #Data.rebirth.cost
 Config.MaxPenLevel = 9
 Config.World2 = { rebirths = 5, petRarity = 6, penLevel = 7, coins = 10000000 } -- petRarity 6 = Mythic
 Config.World2Origin = Vector3.new(2000, 0, 0) -- World 2 is a second zone far east of World 1 (see World2Service)
+-- Robux: Developer Products that buy the NEXT weapon for your class (made on the Creator Hub, Monetization >
+-- Developer Products). Each entry covers weapon tiers up to `upToTier`; the first entry that fits is used.
+-- productId 0 = not set up yet: the Robux button stays hidden and nothing can be bought with Robux.
+Config.WeaponRobuxProducts = {
+	{ upToTier = 11, productId = 0 },
+}
+function Config.weaponRobuxProduct(nextTier)
+	for _, entry in ipairs(Config.WeaponRobuxProducts) do
+		if nextTier <= entry.upToTier then
+			return entry.productId ~= 0 and entry.productId or nil
+		end
+	end
+	return nil
+end
 Config.AggroSpeedBoost = 1.25 -- enemies move 25% faster once someone grabs an egg
 
 -- ---------- pets, pen, rebirth ----------
@@ -66,8 +80,11 @@ Config.SameFloorHeight = 5.5 -- hits only land if attacker and target are this c
 Config.Combat = {
 	Knight = { base = 3, cooldown = 0.3, reach = 92 / 9, reachPerTier = 10 / 9, arc = 1, closeRange = 30 / 9 },
 	Wizard = { base = 3, cooldown = 0.4, speed = 480 / 9, life = 110 / 60, blastBase = 2, blastRadius = 66 / 9, blastPerTier = 1 },
-	Bowman = { base = 2, cooldown = 0.26, speed = 780 / 9, life = 80 / 60, pierce = 3 },
+	-- Bowman is stronger than in the JS game (Carlo and Lorenzo, 2026-11-17): base 2 -> 2.7, arrows fly further
+	-- (life 80/60 -> 105/60) and go through one more enemy (pierce 3 -> 4). Health is raised below.
+	Bowman = { base = 2.7, cooldown = 0.26, speed = 780 / 9, life = 105 / 60, pierce = 4, volley = 9 },
 }
+Data.classes.Bowman.health = 125 -- JS has 100; set here so `npm run export:roblox` doesn't undo it
 Config.Classes = { "Knight", "Wizard", "Bowman" }
 
 -- Bowman arrows pierce one more enemy at weapon tiers 2, 4 and 8 (like the JS game).

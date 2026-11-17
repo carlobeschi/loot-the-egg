@@ -53,6 +53,7 @@ local function defaults()
 		world2Unlocked = false,
 		showPets = true,
 		soundOn = true, -- music and sound effects (the Settings switch)
+		receipts = {}, -- Robux purchase ids already given (so a purchase is never given twice)
 		lastSave = 0,
 	}
 end

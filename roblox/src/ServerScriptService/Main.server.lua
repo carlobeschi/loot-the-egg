@@ -41,6 +41,7 @@ local R = {
 	SetSoundOn = makeRemote("SetSoundOn"), -- client -> server: true | false (music and sounds, from Settings)
 	PlaceEgg = makeRemote("PlaceEgg"),
 	BuyWeapon = makeRemote("BuyWeapon"), -- client -> server: class name
+	BuyWeaponRobux = makeRemote("BuyWeaponRobux"), -- client -> server: show the Robux window for the next weapon
 	BuyUpgrade = makeRemote("BuyUpgrade"), -- client -> server: "health" | "speed" | "ability"
 	OpenWindow = makeRemote("OpenWindow"), -- server -> client: "Weapons" | "Upgrades" | "WorldGate" | "Pen" -- client -> server: (rarity, spot clicked in the pen)
 	Attack = makeRemote("Attack"),
@@ -142,6 +143,11 @@ end)
 R.BuyWeapon.OnServerEvent:Connect(function(player, className)
 	if allowed(player, "Buy", 0.3) and type(className) == "string" then
 		ShopService.BuyWeapon(player, className)
+	end
+end)
+R.BuyWeaponRobux.OnServerEvent:Connect(function(player)
+	if allowed(player, "BuyRobux", 1) then
+		ShopService.PromptWeaponRobux(player)
 	end
 end)
 R.BuyUpgrade.OnServerEvent:Connect(function(player, kind)

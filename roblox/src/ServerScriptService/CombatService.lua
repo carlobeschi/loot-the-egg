@@ -22,67 +22,31 @@ local lastAbility = {} -- [Player] = os.clock() of their last ability
 local projectiles = {} -- moving bolts and arrows
 local projectileFolder
 
--- ---------- the weapon Tools (simple Part models, swap for real models later) ----------
-local function weld(a, b)
-	local w = Instance.new("WeldConstraint")
-	w.Part0 = a
-	w.Part1 = b
-	w.Parent = a
-end
-
-local function toolPart(tool, name, size, color, material)
-	local p = Instance.new("Part")
-	p.Name = name
-	p.Size = size
-	p.Color = color
-	p.Material = material or Enum.Material.SmoothPlastic
-	p.CanCollide = false
-	p.Massless = true
-	p.Parent = tool
-	return p
-end
+-- ---------- the weapon Tools (the look comes from Config/WeaponModels, shared with the Blacksmith picture) ----------
+local WeaponModels = require(ReplicatedStorage.Config:WaitForChild("WeaponModels"))
 
 local function makeTool(className, tier)
 	local info = Config.weaponInfo(className, tier)
-	local color = Color3.fromHex(info.color)
 	local tool = Instance.new("Tool")
 	tool.Name = info.name
 	tool.CanBeDropped = false
 	tool.ToolTip = className .. " weapon, tier " .. tier
 	tool:SetAttribute("WeaponClass", className)
 	tool:SetAttribute("Tier", tier)
-	local material = (tier >= 6) and Enum.Material.Neon or Enum.Material.Metal
-
-	if className == "Knight" then
-		-- the Handle is the grip; the blade points forward out of the hand
-		local handle = toolPart(tool, "Handle", Vector3.new(0.35, 0.35, 1.2), Color3.fromRGB(90, 60, 35), Enum.Material.Wood)
-		local blade = toolPart(tool, "Blade", Vector3.new(0.2, 0.6, 3.6), color, material)
-		blade.CFrame = handle.CFrame * CFrame.new(0, 0, -2.4)
-		local guard = toolPart(tool, "Guard", Vector3.new(0.3, 1.2, 0.3), Color3.fromRGB(200, 170, 80), Enum.Material.Metal)
-		guard.CFrame = handle.CFrame * CFrame.new(0, 0, -0.6)
-		weld(handle, blade)
-		weld(handle, guard)
-	elseif className == "Wizard" then
-		local handle = toolPart(tool, "Handle", Vector3.new(0.3, 5, 0.3), Color3.fromRGB(110, 75, 45), Enum.Material.Wood)
-		local orb = toolPart(tool, "Orb", Vector3.new(0.9, 0.9, 0.9), color, Enum.Material.Neon)
-		orb.Shape = Enum.PartType.Ball
-		orb.CFrame = handle.CFrame * CFrame.new(0, 2.8, 0)
-		weld(handle, orb)
-		local light = Instance.new("PointLight")
-		light.Color = color
-		light.Range = 8
-		light.Parent = orb
-		tool.GripPos = Vector3.new(0, -0.5, 0)
-	else
-		local handle = toolPart(tool, "Handle", Vector3.new(0.3, 1, 0.3), Color3.fromRGB(90, 60, 35), Enum.Material.Wood)
-		for _, side in ipairs({ -1, 1 }) do
-			local limb = toolPart(tool, "Limb", Vector3.new(0.25, 2, 0.25), color, material)
-			limb.CFrame = handle.CFrame * CFrame.new(0, side * 1.3, 0.35) * CFrame.Angles(math.rad(-20 * side), 0, 0)
-			weld(handle, limb)
+	local model = WeaponModels.Build(className, tier)
+	local handle = model.PrimaryPart
+	for _, p in ipairs(model:GetChildren()) do
+		p.Parent = tool
+		if p:IsA("BasePart") and p ~= handle then
+			local w = Instance.new("WeldConstraint")
+			w.Part0 = handle
+			w.Part1 = p
+			w.Parent = p
 		end
-		local string_ = toolPart(tool, "String", Vector3.new(0.05, 4.4, 0.05), Color3.new(1, 1, 1))
-		string_.CFrame = handle.CFrame * CFrame.new(0, 0, 0.9)
-		weld(handle, string_)
+	end
+	model:Destroy()
+	if className == "Wizard" then
+		tool.GripPos = Vector3.new(0, -0.5, 0)
 	end
 	return tool
 end
@@ -400,7 +364,7 @@ function CombatService.Ability(player, aim)
 		local travel = hit and math.max(0, (hit.Position - origin).Magnitude - 2) or distance
 		root.CFrame = CFrame.lookAt(origin + direction * travel, origin + direction * (travel + 1))
 	else
-		local n = 7 + math.floor(level / 2)
+		local n = Config.Combat.Bowman.volley + math.floor(level / 2)
 		local speed = 660 / 9
 		for i = 0, n - 1 do
 			local angle = (i - (n - 1) / 2) * (1.05 / (n - 1))
