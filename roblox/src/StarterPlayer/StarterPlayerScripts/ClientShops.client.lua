@@ -5,14 +5,17 @@
 ]]
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Data = Config.Data
 local Sounds = require(ReplicatedStorage.Config:WaitForChild("Sounds"))
+local WeaponModels = require(ReplicatedStorage.Config:WaitForChild("WeaponModels"))
 
 local player = Players.LocalPlayer
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
-for _, name in ipairs({ "OpenWindow", "State", "BuyWeapon", "BuyUpgrade", "UpgradePen", "SellWeakest", "EquipBest", "Rebirth", "UnlockWorld2", "Travel" }) do
+for _, name in ipairs({ "OpenWindow", "State", "BuyWeapon", "BuyWeaponRobux", "BuyUpgrade", "UpgradePen", "SellWeakest", "EquipBest", "Rebirth", "UnlockWorld2", "Travel" }) do
 	remotes:WaitForChild(name)
 end
 
@@ -138,21 +141,133 @@ end
 -- ---------- what each window shows ----------
 local windows = {}
 
-windows.Weapons = function(s)
-	title.Text = "Blacksmith (" .. s.class .. ")"
-	local className = s.class -- your class is for good, so only its weapons are for sale
-	local tier = s.weaponTier[className] or 0
-	local have = Config.weaponInfo(className, tier).name
-	if tier >= s.maxWeaponTier then
-		row(1, className .. ": " .. have .. (s.world2 and " (best)" or " (World 2 has more)"), nil)
-	else
-		local nextInfo = Config.weaponInfo(className, tier + 1)
-		row(1, className .. ": " .. have .. "\nNext: " .. nextInfo.name, "Buy " .. short(nextInfo.price), s.coins >= nextInfo.price, function()
-			remotes.BuyWeapon:FireServer(className)
+-- ---------- the Blacksmith: a card with a spinning picture of your next weapon ----------
+local spinner = nil -- { camera, distance, center } of the picture on screen
+local robuxPrices = {} -- [productId] = price in Robux (asked from Roblox once)
+
+local function robuxPrice(productId)
+	if robuxPrices[productId] == nil then
+		robuxPrices[productId] = false -- asking
+		task.spawn(function()
+			local ok, info = pcall(MarketplaceService.GetProductInfo, MarketplaceService, productId, Enum.InfoType.Product)
+			robuxPrices[productId] = ok and info and info.PriceInRobux or false
 		end)
 	end
-	row(9, "Coins: " .. short(s.coins) .. ". New weapons hit harder.", nil)
+	return robuxPrices[productId] or nil
 end
+
+local function cardButton(parent, text, color, position, size, onClick)
+	local b = Instance.new("TextButton")
+	b.Size = size
+	b.Position = position
+	b.BackgroundColor3 = color
+	b.TextColor3 = Color3.new(0, 0, 0)
+	b.Font = Enum.Font.FredokaOne
+	b.TextScaled = true
+	b.Text = text
+	b.Parent = parent
+	Instance.new("UICorner", b)
+	b.MouseButton1Click:Connect(onClick)
+	return b
+end
+
+local function cardText(parent, text, position, size, color)
+	local l = Instance.new("TextLabel")
+	l.Size = size
+	l.Position = position
+	l.BackgroundTransparency = 1
+	l.TextColor3 = color or Color3.new(1, 1, 1)
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextXAlignment = Enum.TextXAlignment.Left
+	l.Text = text
+	l.Parent = parent
+	return l
+end
+
+-- what the card shows; when this doesn't change, the card isn't rebuilt (so the picture keeps spinning)
+local function weaponsKey(s)
+	local tier = s.weaponTier[s.class] or 0
+	local nextInfo = Config.weaponInfo(s.class, math.min(tier + 1, 11))
+	local productId = Config.weaponRobuxProduct(tier + 1)
+	return table.concat({ s.class, tier, s.maxWeaponTier, tostring(s.coins >= (nextInfo.price or 0)), tostring(productId and robuxPrice(productId)) }, "|")
+end
+
+windows.Weapons = function(s)
+	local className = s.class -- your class is for good, so only its weapons are for sale
+	local tier = s.weaponTier[className] or 0
+	local have = Config.weaponInfo(className, tier)
+	local maxed = tier >= s.maxWeaponTier
+	local showTier = maxed and tier or tier + 1
+	local show = Config.weaponInfo(className, showTier)
+	title.Text = "Blacksmith (" .. className .. ")"
+
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, 0, 0, 200)
+	card.BackgroundColor3 = Color3.fromRGB(45, 58, 85)
+	card.LayoutOrder = 1
+	card.Parent = list
+	Instance.new("UICorner", card)
+
+	-- the picture: the real weapon model in a ViewportFrame, turning slowly
+	local view = Instance.new("ViewportFrame")
+	view.Size = UDim2.new(0.42, -8, 1, -12)
+	view.Position = UDim2.fromOffset(6, 6)
+	view.BackgroundColor3 = Color3.fromHex(show.color):Lerp(Color3.fromRGB(20, 26, 40), 0.75)
+	view.Ambient = Color3.fromRGB(170, 170, 180)
+	view.LightColor = Color3.new(1, 1, 1)
+	view.LightDirection = Vector3.new(-1, -1, -1)
+	view.Parent = card
+	Instance.new("UICorner", view)
+	local model = WeaponModels.Build(className, showTier)
+	for _, p in ipairs(model:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored = true
+		end
+	end
+	model.Parent = view
+	local center, size = model:GetBoundingBox()
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = 40
+	camera.Parent = view
+	view.CurrentCamera = camera
+	spinner = { camera = camera, center = center.Position, distance = size.Magnitude * 1.25 }
+
+	-- the words and the buttons
+	local right = UDim2.new(0.42, 6, 0, 0)
+	if maxed then
+		cardText(card, have.name, right + UDim2.fromOffset(0, 10), UDim2.new(0.58, -14, 0, 34))
+		cardText(card, s.world2 and "The best weapon there is!" or "Unlock World 2 at the World Gate for stronger weapons.", right + UDim2.fromOffset(0, 50), UDim2.new(0.58, -14, 0, 44), Color3.fromRGB(255, 220, 120))
+	else
+		local stronger = math.round((Config.weaponDamage(className, tier + 1) / Config.weaponDamage(className, tier) - 1) * 100)
+		cardText(card, "Next weapon", right + UDim2.fromOffset(0, 8), UDim2.new(0.58, -14, 0, 20), Color3.fromRGB(180, 200, 230))
+		cardText(card, show.name, right + UDim2.fromOffset(0, 28), UDim2.new(0.58, -14, 0, 32), Color3.fromHex(show.color):Lerp(Color3.new(1, 1, 1), 0.5))
+		cardText(card, "Hits " .. stronger .. "% harder than your " .. have.name, right + UDim2.fromOffset(0, 62), UDim2.new(0.58, -14, 0, 34))
+		local canPay = s.coins >= show.price
+		cardButton(card, "Buy for " .. short(show.price) .. " coins", canPay and Color3.fromRGB(255, 211, 74) or Color3.fromRGB(130, 130, 140), right + UDim2.fromOffset(0, 104), UDim2.new(0.58, -14, 0, 40), function()
+			if canPay then
+				Sounds.PlayLocal("buy")
+			end
+			remotes.BuyWeapon:FireServer(className)
+		end)
+		local productId = Config.weaponRobuxProduct(tier + 1)
+		local price = productId and robuxPrice(productId)
+		if productId then
+			cardButton(card, price and ("Buy for R$ " .. price) or "Buy with Robux", Color3.fromRGB(111, 209, 111), right + UDim2.fromOffset(0, 150), UDim2.new(0.58, -14, 0, 40), function()
+				remotes.BuyWeaponRobux:FireServer()
+			end)
+		end
+	end
+	row(2, "Coins: " .. short(s.coins) .. ". Each new weapon hits harder.", nil)
+end
+
+RunService.RenderStepped:Connect(function()
+	if spinner and spinner.camera.Parent then
+		local a = os.clock() * 0.8
+		local offset = Vector3.new(math.sin(a), 0.35, math.cos(a)).Unit * spinner.distance
+		spinner.camera.CFrame = CFrame.lookAt(spinner.center + offset, spinner.center)
+	end
+end)
 
 windows.Upgrades = function(s)
 	title.Text = "Trainer (" .. s.class .. ")"
@@ -236,7 +351,17 @@ windows.WorldGate = function(s)
 	end)
 end
 
+local lastKey = nil -- the Blacksmith card is only rebuilt when what it shows changes
 local function render()
+	if current == "Weapons" and state and frame.Visible then
+		local key = weaponsKey(state)
+		if key == lastKey then
+			return
+		end
+		lastKey = key
+	else
+		lastKey = nil
+	end
 	clearRows()
 	if not current or not state then
 		frame.Visible = false

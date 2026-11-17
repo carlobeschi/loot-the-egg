@@ -19,6 +19,7 @@ local STONE = Color3.fromRGB(150, 146, 140)
 local DARK_STONE = Color3.fromRGB(110, 108, 104)
 local WOOD = Color3.fromRGB(116, 80, 48)
 local IRON = Color3.fromRGB(45, 42, 44)
+local GOLD_COLOR = Color3.fromRGB(230, 190, 80)
 
 local folder
 local pathCount = 0 -- each path sits a hair higher than the last, so crossing paths don't flicker
@@ -310,6 +311,204 @@ local function lighting()
 	end
 end
 
+-- ---------- more things to look at (2026-11-17: "make the map look even better") ----------
+
+local function barrel(x, z, angle)
+	local base = CFrame.new(x, 0, z) * CFrame.Angles(0, angle or 0, 0)
+	column("Barrel", 3, 2.4, (base * CFrame.new(0, 1.5, 0)).Position, WOOD, Enum.Material.WoodPlanks, true)
+	for _, y in ipairs({ 0.5, 2.5 }) do
+		column("Hoop", 0.25, 2.5, (base * CFrame.new(0, y, 0)).Position, IRON, Enum.Material.Metal)
+	end
+end
+
+local function crate(x, z, size, angle)
+	solid("Crate", Vector3.one * size, CFrame.new(x, size / 2, z) * CFrame.Angles(0, angle or 0, 0), Color3.fromRGB(150, 110, 65), Enum.Material.WoodPlanks)
+end
+
+-- a market stall with a striped awning, facing -Z (toward the fountain when it stands north of it)
+local function stall(x, z, color, goods)
+	local base = CFrame.new(x, 0, z) * CFrame.Angles(0, math.pi, 0)
+	solid("StallCounter", Vector3.new(9, 3, 3), base * CFrame.new(0, 1.5, 0), Color3.fromRGB(140, 95, 55), Enum.Material.WoodPlanks)
+	for _, sx in ipairs({ -4.3, 4.3 }) do
+		for _, sz in ipairs({ -1.3, 3 }) do
+			deco("StallPost", Vector3.new(0.5, 8, 0.5), base * CFrame.new(sx, 4, sz), WOOD, Enum.Material.Wood)
+		end
+	end
+	for i = 0, 5 do -- the awning: stripes, sloping down toward the front
+		local stripe = (i % 2 == 0) and color or Color3.fromRGB(250, 245, 235)
+		deco("Awning", Vector3.new(1.6, 0.25, 5.4), base * CFrame.new(-4 + i * 1.6, 8, 0.85) * CFrame.Angles(-0.25, 0, 0), stripe, Enum.Material.Fabric)
+	end
+	local rng = Random.new(math.floor(x * 7 + z))
+	for i = 0, 5 do -- goods on the counter
+		local gx = -3.5 + i * 1.4
+		deco("Goods", Vector3.one * rng:NextNumber(0.7, 1.1), base * CFrame.new(gx, 3.45, 0), goods[i % #goods + 1], Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+	end
+end
+
+-- little coloured flags on a string between two points
+local function bunting(a, b)
+	local colors = { Color3.fromRGB(255, 90, 90), Color3.fromRGB(255, 210, 70), Color3.fromRGB(90, 170, 255), Color3.fromRGB(120, 210, 110) }
+	local n = math.floor((b - a).Magnitude / 2.2)
+	for i = 0, n do
+		local t = i / n
+		local p = a:Lerp(b, t) - Vector3.new(0, math.sin(t * math.pi) * 2.2, 0) -- it sags in the middle
+		local look = CFrame.lookAt(p, p + (b - a))
+		deco("Flag", Vector3.new(0.05, 1, 1), look * CFrame.Angles(0, math.pi / 2, 0) * CFrame.new(0, -0.5, 0) * CFrame.Angles(math.pi / 4, 0, 0), colors[i % #colors + 1], Enum.Material.Fabric)
+	end
+	local mid = (a + b) / 2 - Vector3.new(0, 1.1, 0)
+	deco("FlagString", Vector3.new(0.08, 0.08, (b - a).Magnitude), CFrame.lookAt(mid, mid + (b - a)), Color3.fromRGB(240, 240, 240), Enum.Material.SmoothPlastic)
+end
+
+local function townExtras()
+	stall(-28, 24, Color3.fromRGB(230, 70, 70), { Color3.fromRGB(230, 50, 50), Color3.fromRGB(255, 200, 40), Color3.fromRGB(120, 200, 60) })
+	stall(28, 24, Color3.fromRGB(70, 130, 230), { Color3.fromRGB(255, 140, 40), Color3.fromRGB(160, 90, 220), Color3.fromRGB(250, 240, 200) })
+	-- barrels and crates behind the Blacksmith and the Trainer (their backs face the fountain)
+	barrel(-34, -1.5, 0.3)
+	barrel(-30.5, -1.5, 1)
+	crate(-26.5, -1.8, 2.6, 0.2)
+	crate(34, -1.8, 2.6, -0.3)
+	barrel(30.5, -1.5, 0.6)
+	crate(27, -1.6, 1.8, 0.5)
+	-- bunting between the lamp posts across the square
+	bunting(Vector3.new(-16, 10, -22), Vector3.new(16, 10, -22))
+	bunting(Vector3.new(-16, 10, 22), Vector3.new(16, 10, 22))
+	bunting(Vector3.new(-16, 10, -22), Vector3.new(-16, 10, 22))
+	bunting(Vector3.new(16, 10, -22), Vector3.new(16, 10, 22))
+end
+
+-- a little cottage with a roof, door, glowing windows and a chimney; it faces `angle`
+local function cottage(x, z, angle, wallColor, roofColor)
+	local base = CFrame.new(x, 0, z) * CFrame.Angles(0, angle, 0)
+	solid("CottageWalls", Vector3.new(16, 9, 12), base * CFrame.new(0, 4.5, 0), wallColor, Enum.Material.Plaster)
+	for _, sx in ipairs({ -8, 8 }) do
+		for _, sz in ipairs({ -6, 6 }) do
+			deco("Beam", Vector3.new(0.8, 9, 0.8), base * CFrame.new(sx, 4.5, sz), DARK_STONE:Lerp(WOOD, 0.8), Enum.Material.Wood)
+		end
+	end
+	for _, side in ipairs({ -1, 1 }) do -- two roof slopes
+		deco("Roof", Vector3.new(18, 0.8, 8.6), base * CFrame.new(0, 11.4, side * 3.4) * CFrame.Angles(side * 0.62, 0, 0), roofColor, Enum.Material.Slate)
+	end
+	-- the triangle under the roof at both ends: a long box turned 45 degrees, its top corner just under the ridge
+	deco("Gable", Vector3.new(15.6, 5.4, 5.4), base * CFrame.new(0, 10, 0) * CFrame.Angles(math.pi / 4, 0, 0), wallColor, Enum.Material.Plaster)
+	deco("Door", Vector3.new(3, 5.5, 0.3), base * CFrame.new(0, 2.75, -6.1), WOOD, Enum.Material.WoodPlanks)
+	deco("DoorKnob", Vector3.one * 0.4, base * CFrame.new(1, 2.8, -6.3), GOLD_COLOR, Enum.Material.Metal, Enum.PartType.Ball)
+	for _, wx in ipairs({ -5, 5 }) do
+		local win = deco("Window", Vector3.new(2.6, 2.4, 0.3), base * CFrame.new(wx, 5, -6.1), Color3.fromRGB(255, 215, 130), Enum.Material.Neon)
+		win.Transparency = 0.15
+		deco("WindowFrame", Vector3.new(3.2, 0.4, 0.4), base * CFrame.new(wx, 3.7, -6.2), WOOD, Enum.Material.Wood)
+		deco("FlowerBox", Vector3.new(3, 0.7, 0.8), base * CFrame.new(wx, 3.2, -6.5), Color3.fromRGB(120, 80, 50), Enum.Material.WoodPlanks)
+		for f = -1, 1 do
+			deco("Flower", Vector3.one * 0.6, base * CFrame.new(wx + f * 0.9, 3.8, -6.5), FLOWER_COLORS[(f + 2 + math.floor(wx)) % #FLOWER_COLORS + 1], Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+		end
+	end
+	solid("Chimney", Vector3.new(2, 6, 2), base * CFrame.new(5, 13, 3), DARK_STONE, Enum.Material.Brick)
+	local smokePart = deco("ChimneyTop", Vector3.new(2.2, 0.4, 2.2), base * CFrame.new(5, 16.2, 3), DARK_STONE, Enum.Material.Brick)
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Color = ColorSequence.new(Color3.fromRGB(220, 220, 220))
+	smoke.Size = NumberSequence.new(1, 3)
+	smoke.Transparency = NumberSequence.new(0.5, 1)
+	smoke.Lifetime = NumberRange.new(3, 4)
+	smoke.Rate = 3
+	smoke.Speed = NumberRange.new(2, 3)
+	smoke.SpreadAngle = Vector2.new(10, 10)
+	smoke.Parent = smokePart
+	-- a little path stone and a fence in front
+	deco("DoorStep", Vector3.new(4, 0.3, 3), base * CFrame.new(0, 0.15, -8), STONE, Enum.Material.Slate)
+	blockCircle(x, z, 16)
+end
+
+-- a windmill (it doesn't turn: moving parts cost a lot of network on a server)
+local function windmill(x, z)
+	column("MillBase", 18, 9, Vector3.new(x, 9, z), Color3.fromRGB(225, 215, 195), Enum.Material.Plaster, true)
+	for r = 0, 4 do
+		column("MillRoof", 1.6, 10 - r * 2, Vector3.new(x, 18.8 + r * 1.5, z), Color3.fromRGB(160, 60, 50), Enum.Material.Slate)
+	end
+	local hub = CFrame.new(x, 15, z - 5)
+	deco("Hub", Vector3.one * 1.6, hub, WOOD, Enum.Material.Wood, Enum.PartType.Ball)
+	for i = 0, 3 do
+		local arm = hub * CFrame.Angles(0, 0, i * math.pi / 2 + 0.3)
+		deco("Sail", Vector3.new(1, 11, 0.3), arm * CFrame.new(0, 6, 0), WOOD, Enum.Material.Wood)
+		deco("SailCloth", Vector3.new(3, 9, 0.15), arm * CFrame.new(1.8, 6.5, 0.1), Color3.fromRGB(245, 240, 225), Enum.Material.Fabric)
+	end
+	deco("MillDoor", Vector3.new(3, 5, 0.4), CFrame.new(x, 2.5, z - 4.4), WOOD, Enum.Material.WoodPlanks)
+	blockCircle(x, z, 12)
+end
+
+local function mushroom(rng, x, z)
+	local s = rng:NextNumber(0.7, 1.4)
+	column("MushroomStem", 1.2 * s, 0.5 * s, Vector3.new(x, 0.6 * s, z), Color3.fromRGB(240, 230, 210), Enum.Material.SmoothPlastic)
+	local cap = rng:NextNumber() < 0.6 and Color3.fromRGB(220, 50, 50) or Color3.fromRGB(190, 130, 70)
+	deco("MushroomCap", Vector3.new(0.6 * s, 1.5 * s, 1.5 * s), CFrame.new(x, 1.3 * s, z) * CFrame.Angles(0, 0, math.pi / 2), cap, Enum.Material.SmoothPlastic, Enum.PartType.Cylinder)
+	if cap.R > 0.8 then
+		for _ = 1, 3 do
+			deco("Dot", Vector3.one * 0.2 * s, CFrame.new(x + rng:NextNumber(-0.5, 0.5) * s, 1.6 * s, z + rng:NextNumber(-0.5, 0.5) * s), Color3.new(1, 1, 1), Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+		end
+	end
+end
+
+local function grassTuft(rng, x, z)
+	local color = GRASS:Lerp(Color3.fromRGB(150, 200, 90), rng:NextNumber())
+	for i = 0, 2 do
+		deco("Grass", Vector3.new(0.12, rng:NextNumber(0.8, 1.6), 0.5), CFrame.new(x, 0.5, z) * CFrame.Angles(0, i * 1.05 + rng:NextNumber(), rng:NextNumber(-0.3, 0.3)), color, Enum.Material.Grass)
+	end
+end
+
+-- slightly lighter and darker patches of grass, so the ground isn't one flat colour
+local function groundPatch(rng, x, z)
+	local d = rng:NextNumber(14, 34)
+	local color = GRASS:Lerp(rng:NextNumber() < 0.5 and Color3.fromRGB(70, 130, 55) or Color3.fromRGB(140, 185, 85), rng:NextNumber(0.3, 0.7))
+	column("GrassPatch", 0.06, d, Vector3.new(x, 0.03, z), color, Enum.Material.Grass)
+end
+
+-- butterflies: little coloured specks drifting over the field (a ParticleEmitter, no moving parts)
+local function butterflies(x, z)
+	local spot = deco("Butterflies", Vector3.new(30, 1, 30), CFrame.new(x, 3, z), Color3.new(1, 1, 1))
+	spot.Transparency = 1
+	local e = Instance.new("ParticleEmitter")
+	e.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 120, 200)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 200, 255)),
+	})
+	e.Size = NumberSequence.new(0.35)
+	e.Lifetime = NumberRange.new(5, 8)
+	e.Rate = 1.5
+	e.Speed = NumberRange.new(1, 2.5)
+	e.SpreadAngle = Vector2.new(180, 40)
+	e.RotSpeed = NumberRange.new(-200, 200)
+	e.Shape = Enum.ParticleEmitterShape.Box
+	e.Parent = spot
+end
+
+-- big soft clouds high up
+local function clouds()
+	local rng = Random.new(31)
+	for _ = 1, 16 do
+		local x, z = rng:NextNumber(-600, 600), rng:NextNumber(-600, 600)
+		local y = rng:NextNumber(170, 230)
+		for _ = 1, rng:NextInteger(3, 5) do
+			local s = rng:NextNumber(18, 34)
+			local c = deco("Cloud", Vector3.one * s, CFrame.new(x + rng:NextNumber(-25, 25), y + rng:NextNumber(-4, 4), z + rng:NextNumber(-12, 12)), Color3.new(1, 1, 1), Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+			c.Transparency = 0.15
+			c.CastShadow = false
+		end
+	end
+end
+
+-- a stone lantern on each side where a dungeon path leaves the cross path
+local function dungeonLanterns(x, z)
+	for _, side in ipairs({ -1, 1 }) do
+		local at = Vector3.new(x + side * 5.5, 0, z)
+		solid("LanternBase", Vector3.new(1.6, 3.6, 1.6), CFrame.new(at + Vector3.new(0, 1.8, 0)), DARK_STONE, Enum.Material.Slate)
+		local flame = deco("LanternFlame", Vector3.new(0.8, 1.1, 0.8), CFrame.new(at + Vector3.new(0, 4.2, 0)), Color3.fromRGB(255, 160, 60), Enum.Material.Neon)
+		deco("LanternCap", Vector3.new(2, 0.5, 2), CFrame.new(at + Vector3.new(0, 5, 0)), DARK_STONE, Enum.Material.Slate)
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(255, 160, 80)
+		light.Range = 12
+		light.Parent = flame
+	end
+end
+
 -- towerSpots: the World 1 dungeon middles (TowerService.WORLD1_SPOTS)
 function WorldDecorService.Build(towerSpots)
 	local old = workspace:FindFirstChild("Scenery")
@@ -343,6 +542,7 @@ function WorldDecorService.Build(towerSpots)
 	end
 
 	buildTown()
+	townExtras()
 
 	-- paths: town -> pens (and between the two rows of pens), town -> the dungeon doors
 	path(0, 45, 0, north + 6, 9)
@@ -367,6 +567,11 @@ function WorldDecorService.Build(towerSpots)
 		path(spot.X, crossZ, spot.X, door, 6) -- to the door; for the back row it goes between the front towers
 	end
 	path(minX, crossZ, maxX, crossZ, 7)
+	for _, spot in ipairs(towerSpots) do
+		if spot.Z == frontZ then
+			dungeonLanterns(spot.X, crossZ - 6)
+		end
+	end
 
 	-- signposts where the paths split
 	signpost(Vector3.new(7, 0, crossZ + 7), Vector3.new(0, 0, 1), { "Dungeons", "<  1 - 9  >" })
@@ -383,6 +588,21 @@ function WorldDecorService.Build(towerSpots)
 	-- a pond on each side between the town and the pens
 	buildPond(-110, 40)
 	buildPond(125, -10)
+
+	-- a windmill and three cottages at the edge of the woods (before the trees, so the trees keep away)
+	windmill(-175, 150)
+	cottage(178, 140, math.pi / 2, Color3.fromRGB(240, 228, 200), Color3.fromRGB(150, 70, 55))
+	cottage(-185, -40, -math.pi / 2, Color3.fromRGB(230, 215, 190), Color3.fromRGB(70, 90, 140))
+	cottage(185, -150, math.pi / 2, Color3.fromRGB(245, 235, 215), Color3.fromRGB(90, 120, 70))
+
+	-- the ground: lighter and darker grass patches, under everything else
+	local patchRng = Random.new(3)
+	for _ = 1, 70 do
+		local x, z = patchRng:NextNumber(-260, 260), patchRng:NextNumber(-280, 300)
+		if isFree(x, z, 4) then
+			groundPatch(patchRng, x, z)
+		end
+	end
 
 	-- the playing field: bushes, flowers and a few rocks and trees, not too many so nothing gets in the way
 	local rng = Random.new(7)
@@ -421,6 +641,23 @@ function WorldDecorService.Build(towerSpots)
 		end
 	end
 
+	-- small things: grass tufts and mushrooms (near the woods), butterflies over the field
+	for _ = 1, 260 do
+		local x, z = rng:NextNumber(-fieldX - 30, fieldX + 30), rng:NextNumber(-290, north + 60)
+		if isFree(x, z, 1) then
+			local nearWoods = math.abs(x) > fieldX - 40 or z < -230 or z > north + 20
+			if nearWoods and rng:NextNumber() < 0.35 then
+				mushroom(rng, x, z)
+			else
+				grassTuft(rng, x, z)
+			end
+		end
+	end
+	for _, spot in ipairs({ Vector3.new(-110, 0, 40), Vector3.new(125, 0, -10), Vector3.new(-160, 0, 130), Vector3.new(170, 0, 60), Vector3.new(0, 0, -240), Vector3.new(-200, 0, -120) }) do
+		butterflies(spot.X, spot.Z)
+	end
+
+	clouds()
 	buildHills()
 	folder.Parent = workspace
 end

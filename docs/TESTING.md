@@ -118,3 +118,15 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
 - [ ] Two ponds, bushes, flowers, rocks, a forest around the edges and hills far away.
 - [ ] Nothing blocks a path, a pen, a shop or a dungeon door. Output has no `[WorldDecorService]` warning.
 - [ ] The minimap still shows everything (it fits itself to the new dungeon spots).
+
+## Stronger Bowman, new weapon looks, Blacksmith card, more scenery
+
+- [ ] Bowman: 125 health, arrows hit harder (base 2.7), fly further and go through 4 enemies; the Q volley has 9 arrows.
+- [ ] Sword, staff and bow look new (grip, guard, pointed blade; prongs holding a glowing orb; curved bow with an
+      arrow). Better tiers get gold, gems, glow and sparkles. Each is held the same way as before.
+- [ ] Blacksmith shows one card: a turning picture of your NEXT weapon, its name, how much harder it hits, and a
+      "Buy for N coins" button. At the best weapon it says so.
+- [ ] Robux: hidden until a Developer Product id is put in `Config.WeaponRobuxProducts`. With an id, a green
+      "Buy for R$ N" button shows; buying gives the next weapon once (Studio test purchases are free).
+- [ ] Map: market stalls with striped awnings, bunting over the square, barrels and crates, lanterns at the dungeon
+      paths, three cottages with smoking chimneys, a windmill, grass patches and tufts, mushrooms, butterflies, clouds.

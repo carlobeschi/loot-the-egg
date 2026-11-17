@@ -8,6 +8,8 @@
   that window (ClientShops). Buying goes through RemoteEvents, and the server checks every price.
 ]]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Data = Config.Data
@@ -38,6 +40,66 @@ function ShopService.BuyWeapon(player, className)
 	profile.weaponTier[className] = tier + 1
 	CombatService.Equip(player, true)
 	notify(player, "Bought the " .. nextInfo.name .. "!")
+end
+
+-- ---------- buying the next weapon with Robux (Config.WeaponRobuxProducts) ----------
+-- The client asks; the server checks there IS a next weapon before Roblox shows the purchase window.
+function ShopService.PromptWeaponRobux(player)
+	local profile = DataService.Get(player)
+	if not profile or profile._noSave then
+		return -- never sell something we couldn't save
+	end
+	local tier = profile.weaponTier[profile.class] or 0
+	if tier >= Config.maxWeaponTier(profile.world2Unlocked) then
+		notify(player, "You already have the best weapon you can get right now!")
+		return
+	end
+	local productId = Config.weaponRobuxProduct(tier + 1)
+	if productId then
+		MarketplaceService:PromptProductPurchase(player, productId)
+	end
+end
+
+local function isWeaponProduct(productId)
+	for _, entry in ipairs(Config.WeaponRobuxProducts) do
+		if entry.productId == productId then
+			return true
+		end
+	end
+	return false
+end
+
+-- Roblox calls this after a Robux payment (also again later if we said "not yet"). Only return PurchaseGranted
+-- once the weapon is given and saved, and never give it twice for the same purchase.
+local function processReceipt(receipt)
+	local player = Players:GetPlayerByUserId(receipt.PlayerId)
+	local profile = player and DataService.Get(player)
+	if not profile or profile._noSave or not isWeaponProduct(receipt.ProductId) then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+	profile.receipts = profile.receipts or {}
+	if table.find(profile.receipts, receipt.PurchaseId) then
+		return Enum.ProductPurchaseDecision.PurchaseGranted -- already given
+	end
+	local className = profile.class
+	local tier = profile.weaponTier[className] or 0
+	local maxTier = Config.maxWeaponTier(profile.world2Unlocked)
+	if tier < maxTier then
+		profile.weaponTier[className] = tier + 1
+		CombatService.Equip(player, true)
+		notify(player, "Thanks! You got the " .. Config.weaponInfo(className, tier + 1).name .. "!")
+	else
+		-- bought twice very fast: make up for it with coins instead of a weapon they can't have
+		local refund = Config.weaponInfo(className, maxTier).price
+		profile.coins += refund
+		notify(player, "You already had the best weapon, so you got " .. refund .. " coins instead.")
+	end
+	table.insert(profile.receipts, receipt.PurchaseId)
+	while #profile.receipts > 50 do
+		table.remove(profile.receipts, 1)
+	end
+	DataService.Save(player)
+	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 
 local UPGRADE_KINDS = { health = true, speed = true, ability = true }
@@ -134,6 +196,7 @@ function ShopService.Init(dataService, plotService, combatService, openWindowRem
 	CombatService = combatService
 	openWindow = openWindowRemote
 	notify = notifyFunction or notify
+	MarketplaceService.ProcessReceipt = processReceipt
 
 	local folder = workspace:FindFirstChild("Town")
 	if not folder then
