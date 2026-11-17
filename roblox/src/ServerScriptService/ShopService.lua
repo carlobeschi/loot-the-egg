@@ -1,6 +1,6 @@
 --[[ ShopService  (ModuleScript, put it in ServerScriptService)
   The places in town where you spend coins, and what they sell:
-    Blacksmith  - weapon tiers for each class (names and prices from the JS game)
+    Blacksmith  - weapon tiers for your class (names and prices from the JS game)
     Trainer     - upgrades for your current class: health, speed, ability
     World Gate  - unlocks World 2 when you meet all four requirements
     Pen sign    - on every plot: upgrade the pen, sell your weakest pet, equip best
@@ -20,8 +20,8 @@ local notify = function(_player, _text) end
 -- ---------- buying ----------
 function ShopService.BuyWeapon(player, className)
 	local profile = DataService.Get(player)
-	if not profile or not Data.weapons[className] then
-		return
+	if not profile or not Data.weapons[className] or className ~= profile.class then
+		return -- you can only buy weapons for your own class (it can't change)
 	end
 	local tier = profile.weaponTier[className] or 0
 	local maxTier = Config.maxWeaponTier(profile.world2Unlocked)
@@ -36,9 +36,7 @@ function ShopService.BuyWeapon(player, className)
 	end
 	profile.coins -= nextInfo.price
 	profile.weaponTier[className] = tier + 1
-	if profile.class == className then
-		CombatService.Equip(player, true)
-	end
+	CombatService.Equip(player, true)
 	notify(player, "Bought the " .. nextInfo.name .. "!")
 end
 

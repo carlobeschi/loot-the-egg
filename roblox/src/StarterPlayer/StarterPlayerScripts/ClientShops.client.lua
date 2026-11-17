@@ -139,18 +139,17 @@ end
 local windows = {}
 
 windows.Weapons = function(s)
-	title.Text = "Blacksmith"
-	for i, className in ipairs(Config.Classes) do
-		local tier = s.weaponTier[className] or 0
-		local have = Config.weaponInfo(className, tier).name
-		if tier >= s.maxWeaponTier then
-			row(i, className .. ": " .. have .. (s.world2 and " (best)" or " (World 2 has more)"), nil)
-		else
-			local nextInfo = Config.weaponInfo(className, tier + 1)
-			row(i, className .. ": " .. have .. "\nNext: " .. nextInfo.name, "Buy " .. short(nextInfo.price), s.coins >= nextInfo.price, function()
-				remotes.BuyWeapon:FireServer(className)
-			end)
-		end
+	title.Text = "Blacksmith (" .. s.class .. ")"
+	local className = s.class -- your class is for good, so only its weapons are for sale
+	local tier = s.weaponTier[className] or 0
+	local have = Config.weaponInfo(className, tier).name
+	if tier >= s.maxWeaponTier then
+		row(1, className .. ": " .. have .. (s.world2 and " (best)" or " (World 2 has more)"), nil)
+	else
+		local nextInfo = Config.weaponInfo(className, tier + 1)
+		row(1, className .. ": " .. have .. "\nNext: " .. nextInfo.name, "Buy " .. short(nextInfo.price), s.coins >= nextInfo.price, function()
+			remotes.BuyWeapon:FireServer(className)
+		end)
 	end
 	row(9, "Coins: " .. short(s.coins) .. ". New weapons hit harder.", nil)
 end
@@ -170,7 +169,7 @@ windows.Upgrades = function(s)
 			end)
 		end
 	end
-	row(9, "Upgrades belong to each class. Coins: " .. short(s.coins), nil)
+	row(9, "Upgrades for your class. Coins: " .. short(s.coins), nil)
 end
 
 windows.Pen = function(s)

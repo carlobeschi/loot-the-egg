@@ -100,3 +100,11 @@ in full (including clearing Dungeon 10 and banking its egg in the World 2 town).
       start. If another player is still alive inside, it does not reset. Cheats: `InvokeServer("die")` kills you,
       `InvokeServer("reset", 1)` empties Dungeon 1.
 - [ ] World 2 bosses have a bit less health (0.72 instead of 0.78) and hit for 18 instead of 19.
+
+## Class is picked once
+
+- [ ] A new player (fresh save) sees "Choose your class" in the middle of the screen. Picking one closes it and
+      gives that class's weapon. The screen never comes back, even after leaving and rejoining.
+- [ ] There are no class buttons on the HUD any more. The Blacksmith only sells weapons for your own class.
+- [ ] An old save (from before this change) keeps the class it had and does not see the picker.
+- [ ] The Studio cheat `InvokeServer("class", "Wizard")` still switches class, for testing.
